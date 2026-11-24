@@ -1,0 +1,713 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>דירוג דירות אליה על הפארק</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&family=Rubik:wght@400;500;600&family=Suez+One&display=swap">
+<style>
+/* Layout: a field sheet for selection day — verdict and pick zone up top, the ranked unit list as the working tool, evidence below. */
+:root{
+  --bg:#EDF0EA; --surface:#FFFFFF; --sunk:#E3E8E1; --ink:#1B2620; --muted:#56655B; --line:#CFD8CF;
+  --accent:#2A432D; --accent-ink:#FFFFFF; --ochre:#B98A12; --ochre-soft:#F5E7BE;
+  --good:#2E7A4C; --warn:#A8621C; --bad:#A3392C;
+  --f-display:"Suez One","Frank Ruhl Libre",Georgia,serif;
+  --f-body:"Assistant","Segoe UI","Arial Hebrew",Arial,sans-serif;
+  --f-data:"Rubik","Assistant","Arial Hebrew",Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1511; --surface:#16201A; --sunk:#1C2821; --ink:#E4EBE5; --muted:#9BAAA0; --line:#2B3A31;
+  --accent:#86B892; --accent-ink:#0E1511; --ochre:#E0B847; --ochre-soft:#3A3118;
+  --good:#6CC08B; --warn:#E39A52; --bad:#EE7B6C; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0E1511; --surface:#16201A; --sunk:#1C2821; --ink:#E4EBE5; --muted:#9BAAA0; --line:#2B3A31;
+  --accent:#86B892; --accent-ink:#0E1511; --ochre:#E0B847; --ochre-soft:#3A3118;
+  --good:#6CC08B; --warn:#E39A52; --bad:#EE7B6C; color-scheme:dark }
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55;direction:rtl}
+main{max-width:1180px;margin:0 auto;padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:40px}
+h1,h2,h3{margin:0;text-wrap:balance}
+h1{font-family:var(--f-display);font-weight:400;font-size:clamp(28px,5vw,44px);line-height:1.15;color:var(--accent)}
+h2{font-family:var(--f-display);font-weight:400;font-size:clamp(22px,3.2vw,28px);color:var(--ink)}
+h3{font-size:17px;font-weight:700}
+p{margin:0;max-width:70ch}
+.num,.tnum{font-family:var(--f-data);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.eyebrow{font-size:13px;letter-spacing:.04em;color:var(--muted);font-weight:600}
+section{display:grid;gap:16px}
+.lede{font-size:18px;max-width:62ch}
+header{display:grid;gap:12px}
+.meta{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:14px;color:var(--muted)}
+
+/* verdict tiles */
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:grid;gap:6px;min-width:0}
+.tile .k{font-size:14px;color:var(--muted);font-weight:600}
+.tile .v{font-family:var(--f-data);font-size:30px;font-weight:600;line-height:1.1;color:var(--accent)}
+.tile .s{font-size:14px;color:var(--muted)}
+@media (max-width:760px){.tiles{grid-template-columns:1fr}}
+
+/* pick zone */
+.zone{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.zcard{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;display:grid;gap:4px;min-width:0}
+.zcard.floor{border-color:var(--warn)}
+.zcard .pos{font-family:var(--f-data);font-size:26px;font-weight:600}
+.zcard .lab{font-size:14px;font-weight:700}
+.zcard .u{font-size:14px;color:var(--muted)}
+.zcard .g{font-family:var(--f-data);font-size:15px;color:var(--good);font-weight:600}
+@media (max-width:860px){.zone{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* tool */
+.toolbar{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
+.seg button{font:inherit;font-size:14px;border:0;background:transparent;color:var(--ink);padding:7px 12px;cursor:pointer}
+.seg button+button{border-inline-start:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:700}
+select,.btn{font:inherit;font-size:14px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);padding:7px 10px}
+.btn{cursor:pointer}
+.btn.danger[data-armed="true"]{background:var(--bad);color:#fff;border-color:var(--bad)}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--ochre);outline-offset:2px}
+.next{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:baseline;background:var(--ochre-soft);border:1px solid var(--ochre);border-radius:10px;padding:12px 16px}
+.next b{font-size:17px}
+.next .num{font-weight:600}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:8px 10px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line)}
+th{position:sticky;top:0;background:var(--sunk);font-weight:700;font-size:13px;z-index:1}
+td.n{font-family:var(--f-data);font-variant-numeric:tabular-nums}
+tr.taken td{color:var(--muted);text-decoration:line-through;background:var(--sunk)}
+tr.taken td.keep{text-decoration:none}
+tr.best td{background:var(--ochre-soft)}
+tr.marker td{background:transparent;border-bottom:2px dashed var(--warn);color:var(--warn);font-size:13px;font-weight:700;padding:6px 10px;text-decoration:none;white-space:normal}
+.rank{font-family:var(--f-data);font-weight:600;font-size:15px}
+.unit{font-weight:700}
+.sub{font-size:12px;color:var(--muted)}
+.gap{color:var(--good);font-weight:600}
+.pill{display:inline-block;font-size:12px;padding:1px 7px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.pill.up{color:var(--good);border-color:var(--good)}
+.pill.down{color:var(--bad);border-color:var(--bad)}
+.chip{display:inline-block;font-family:var(--f-data);font-size:12px;padding:1px 6px;border-radius:6px;background:var(--sunk);color:var(--muted);margin-inline-end:4px}
+.chip.pos{color:var(--good)} .chip.neg{color:var(--bad)}
+td.why{white-space:nowrap}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5;padding-top:6px}
+.tabs a{font-weight:700;font-size:16px;color:var(--muted);text-decoration:none;padding:10px 14px;border-bottom:3px solid transparent;margin-bottom:-1px}
+.tabs a[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+.view{display:grid;gap:40px}
+.calc{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:860px){.calc{grid-template-columns:1fr}}
+.calc-in label{font-size:13px;font-weight:600;color:var(--muted);display:block;margin-bottom:4px}
+.calc-in select,.calc-in input{width:100%;box-sizing:border-box;font:inherit;font-family:var(--f-data);font-size:15px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);padding:7px 9px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px}
+@media (max-width:480px){.grid2{grid-template-columns:1fr}}
+.tracks td,.tracks th{padding:6px 8px}
+.tracks input{width:84px}
+.calc-out{gap:2px}
+.kv{display:flex;justify-content:space-between;gap:12px;align-items:baseline;padding:7px 0;border-bottom:1px solid var(--line);font-size:15px}
+.kv b{font-family:var(--f-data);font-weight:600;text-align:left}
+.kv .big{font-size:26px;color:var(--accent)}
+.kv .pos{color:var(--good)} .kv .neg{color:var(--bad)}
+td.neg{color:var(--bad);font-weight:600}
+.warnbox{margin-top:10px;border:1px solid var(--warn);border-radius:8px;padding:10px 12px;color:var(--warn);font-size:14px;display:grid;gap:4px}
+tr.sum td{font-weight:700;background:var(--sunk)}
+.steps td:first-child{font-weight:700;white-space:nowrap;vertical-align:top}
+.steps td:last-child{white-space:normal}
+.loc{font-family:var(--f-data)}
+.loc.pos{color:var(--good)} .loc.neg{color:var(--bad)}
+.more{display:none}
+.showmore .more{display:table-cell}
+input[type=checkbox]{width:22px;height:22px;accent-color:var(--accent);cursor:pointer}
+@media (max-width:640px){
+  th,td{padding:7px 6px}
+  .wide{display:none}
+  .showmore .wide{display:table-cell}
+  .sub{display:none}
+}
+.posin{display:inline-flex;align-items:center;gap:8px;font-size:14px}
+.posin input{width:70px;font:inherit;font-family:var(--f-data);border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);padding:6px 8px}
+.next .types{display:flex;flex-wrap:wrap;gap:4px 16px;width:100%;font-size:14px}
+.legend{font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 18px}
+
+/* tables in evidence sections */
+.data{width:100%;border-collapse:collapse;font-size:14.5px;background:var(--surface)}
+.data th{position:static}
+.cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+@media (max-width:860px){.cols{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;display:grid;gap:10px;min-width:0}
+ul.check{margin:0;padding:0;list-style:none;display:grid;gap:10px}
+ul.check li{display:grid;grid-template-columns:22px 1fr;gap:8px;align-items:start}
+ul.check li::before{content:"";width:10px;height:10px;margin-top:8px;border-radius:2px;background:var(--warn)}
+ul.check li.ok::before{background:var(--good)}
+ul.check li.bad::before{background:var(--bad)}
+.foot{font-size:13px;color:var(--muted);display:grid;gap:6px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+</head>
+<body>
+<main dir="rtl" lang="he">
+<header>
+  <div class="eyebrow">הגרלה 2149 · מחיר מטרה · פסגת רמות, באר שבע · מעודכן 24.11.2026</div>
+  <h1>אליה על הפארק 2: איזו דירה לבחור</h1>
+  <p class="lede">כל 79 הדירות במחיר מטרה נמכרות בכ־24%–37% מתחת לשווי השוק. אפשר להזין את המקום בסדר הבחירה כדי לראות מה צפוי להישאר בתור שלכם.</p>
+  <div class="meta"><span>פגישת בחירה: 8.12.2026</span><span>מסירה לפי החוזה: 1.9.2029</span><span>מכירה מותרת מ־14.11.2029</span><span>השכרה מותרת</span></div>
+</header>
+
+<nav class="tabs" role="tablist" aria-label="תצוגות">
+  <a href="#pick" role="tab" id="tab-pick" aria-selected="true">בחירת דירה</a>
+  <a href="#money" role="tab" id="tab-money" aria-selected="false">משכנתא ומימון</a>
+</nav>
+
+<div id="view-pick" class="view" role="tabpanel" aria-labelledby="tab-pick">
+<section aria-labelledby="h-verdict">
+  <h2 id="h-verdict">כמה ערך יש בכל סוג דירה</h2>
+  <div class="tiles" id="tiles"></div>
+  <p class="muted" style="font-size:14px">שווי שוק = הערכת אמצע, בין מכירות יד שנייה בבניינים חדשים יחסית (נבנו 2015 ואילך) לבין מחירי קבלן בפרויקטים שליד. הפער = שווי שוק פחות המחיר, הצמדה משוערת, עו״ד והיטל הפשרה. מזגנים לא כלולים.</p>
+</section>
+
+<section aria-labelledby="h-zone">
+  <h2 id="h-zone">מה צפוי להישאר כשיגיע התור</h2>
+  <p>בפרויקטים אחים מאותו מכרז נשרו 12%–43% מהזוכים עד הבחירה. ממלאי הרשימה מקבלים מספר 80 ומעלה ובוחרים אחרון, כך שכל נשירה לפני התור מקדמת אותו. הכרטיסים מניחים שכל מי שלפני בוחר לפי הדירוג הזה, ולכן הם רצפה ולא תחזית.</p>
+  <label class="posin" for="f-pos">המקום שלי בסדר הבחירה <input id="f-pos" type="number" min="1" max="79" value="1" inputmode="numeric"></label>
+  <div class="zone" id="zone"></div>
+  <p class="muted" style="font-size:14px">את המיקום העדכני (״סדר זכייה עדכני״) אפשר לבדוק באתר דירה בהנחה עם תעודת זהות ומספר תעודת הזכאות.</p>
+</section>
+
+<section aria-labelledby="h-tool">
+  <h2 id="h-tool">רשימת הבחירה</h2>
+  <p>ביום הבחירה מסמנים כל דירה שנלקחה, והרשימה מראה מיד את הדירה הטובה ביותר שעוד פנויה. הסימונים נשמרים בדפדפן הזה בלבד.</p>
+  <div class="toolbar">
+    <div class="seg" role="group" aria-label="בסיס הדירוג">
+      <button id="b-base" aria-pressed="true">עם פרמיית קומה +1.5%</button>
+      <button id="b-alt" aria-pressed="false">בלי פרמיית קומה</button>
+    </div>
+    <div class="seg" role="group" aria-label="מספר חדרים">
+      <button data-rooms="all" aria-pressed="true">הכל</button>
+      <button data-rooms="3" aria-pressed="false">3 חד׳</button>
+      <button data-rooms="4" aria-pressed="false">4 חד׳</button>
+      <button data-rooms="5" aria-pressed="false">5 חד׳</button>
+    </div>
+    <label for="f-ent" class="muted" style="font-size:14px">כניסה</label>
+    <select id="f-ent"><option value="all">כל הכניסות</option></select>
+    <button class="btn" id="b-more" aria-pressed="false">עוד עמודות</button>
+    <button class="btn danger" id="b-reset" data-armed="false">ניקוי סימונים</button>
+  </div>
+  <div class="next" id="next" aria-live="polite"></div>
+  <div class="tablewrap" id="tw">
+    <table id="tbl">
+      <thead><tr>
+        <th>נלקחה</th><th>דירוג</th><th>דירה</th><th>חד׳</th><th>קומה</th><th class="wide">שטח</th>
+        <th class="wide">מרפסת</th><th class="wide">מחסן</th><th>חניות</th>
+        <th class="wide">מחיר ₪</th><th class="wide">שווי שוק ₪</th><th>פער ₪</th><th>פער %</th><th class="wide">ממה מורכב הפער</th>
+        <th class="more">טווח פער ₪</th><th class="more">פער לכל ₪ הון</th>
+        <th class="wide">דירוג חלופי</th><th class="wide">מיקום</th>
+      </tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+  <div class="legend">
+    <span><b>ממה מורכב הפער</b>: ״בסיס״ הוא הפער של דירה רגילה באותו שטח (קומה ב׳, מרפסת 12 מ״ר, בלי מחסן, חנייה אחת ב־3–4 חדרים ושתיים ב־5). כל תוספת היא ערך השוק של התכונה פחות מה שהיזם גובה עליה. לדוגמה, מחסן של 7.3 מ״ר שווה כ־44K ועולה כ־29K, ולכן מוסיף כ־16K. כשהפער זהה לגמרי, הדירה בכניסה עם ציון מיקום גבוה יותר מדורגת ראשונה.</span>
+    <span><b>דירוג חלופי</b>: המקום ברשימה בבסיס הדירוג השני. <span class="pill up">↑</span>/<span class="pill down">↓</span> מסמנים שינוי של 15 מקומות ומעלה.</span>
+    <span><b>מיקום</b>: ציון כניסה מ־−2 עד +2 לפי תכנית ההעמדה וההדמיות (נוף לפארק, מרחק מהחניון ומהרמפה). משמש לשבירת שוויון ולא נכלל בשקלים.</span>
+    <span><b>פער לכל ₪ הון</b>: הפער חלקי הון עצמי של 25% מהמחיר.</span>
+  </div>
+</section>
+
+<section aria-labelledby="h-ent">
+  <h2 id="h-ent">בניינים וכניסות</h2>
+  <p>ההבדל בין הכניסות בממוצע קטן, כ־30 אלף ₪, ולכן המיקום בתוך המגרש קובע יותר מהבניין. לפי תכנית ההעמדה, הדירות הדרומיות והדרום־מזרחיות בקומות 3–4 בכניסות E ו־F, ודירות H ו־I הצמודות לפארק, הן הבחירה הטובה. כדאי להימנע מקומות 1–2 בצד הדרומי של C ו־D (מול החניון הפתוח) ומהדירות הדרומיות הנמוכות ב־A. תוכניות הקומות עוד לא פורסמו, ולכן את כיוון הדירה צריך לבדוק בפגישת הבחירה.</p>
+  <div class="tablewrap"><table class="data" id="ent"></table></div>
+</section>
+
+<section aria-labelledby="h-type">
+  <h2 id="h-type">ערך לפי סוג דירה</h2>
+  <div class="tablewrap"><table class="data" id="types"></table></div>
+  <p class="muted" style="font-size:14px">ההבדלים בין 3, 4 ו־5 חדרים בשקלים (25–70 אלף) קטנים מטווח אי־הוודאות (כ־±140 אלף). מה שכן יציב: 3 חדרים מובילים באחוז ההנחה ובתשואה על ההון, 4 ו־5 חדרים בפער המוחלט.</p>
+</section>
+
+<div class="cols">
+<section class="panel" aria-labelledby="h-proof">
+  <h2 id="h-proof">האם הפער מתממש בפועל</h2>
+  <p>263 דירות מחיר למשתכן בבאר שבע נמכרו מחדש בשוק החופשי (רסדור, מבואות מערביים, הפארק). הן נמכרו בכפי 1.6 ממחיר הקנייה, כ־8% בשנה, ובמחיר דומה לבניינים רגילים סמוכים (פער של 0%–6%). כלומר ״תווית״ מחיר למשתכן לא מורידה את מחיר המכירה.</p>
+  <p>הערכה עצמאית לפי המכירות החוזרות האלה לדירות שלנו: 3 חד׳ 1.30–1.40 מ׳ ₪, 4 חד׳ 1.53–1.62 מ׳, 5 חד׳ 1.80–1.90 מ׳. ב־3 וב־5 חדרים זה קרוב להערכת האמצע. ב־4 חדרים זה נמוך ממנה בכ־100–180 אלף ₪, ליד הערכת ה״נמוך״, כך שהפער ב־4 חדרים כנראה קטן מהמוצג ו־4 חדרים לא בהכרח עדיפות על 3 או 5.</p>
+  <p class="muted" style="font-size:14px">ברמות עצמה עוד לא נמכרה מחדש אף דירת מחיר למשתכן, כי הפרויקט הראשון שם הסתיים ב־2024.</p>
+</section>
+<section class="panel" aria-labelledby="h-rent">
+  <h2 id="h-rent">שכירות ותשואה</h2>
+  <table class="data">
+    <thead><tr><th>סוג</th><th>שכר דירה חודשי</th><th>תשואה על המחיר</th></tr></thead>
+    <tbody>
+      <tr><td>3 חד׳</td><td class="n">3,300–4,000 ₪</td><td class="n">5.2%</td></tr>
+      <tr><td>4 חד׳</td><td class="n">4,000–4,800 ₪</td><td class="n">4.6%</td></tr>
+      <tr><td>5 חד׳</td><td class="n">4,600–5,400 ₪</td><td class="n">4.4%</td></tr>
+    </tbody>
+  </table>
+  <p class="muted" style="font-size:14px">שכר דירה שנה מול שנה בבאר שבע: 4 חד׳ +4.0%, 5 חד׳ +4.3%, 3 חד׳ ללא שינוי (למ״ס). בפסגת רמות מתוכננות כ־3,700 יחידות, ולכן בחודשים הראשונים אחרי המסירה עלול להיות עודף היצע.</p>
+</section>
+</div>
+
+
+
+</div>
+
+<div id="view-money" class="view" role="tabpanel" aria-labelledby="tab-money" hidden>
+<section aria-labelledby="h-fin">
+  <h2 id="h-fin">כמה הון עצמי וכמה החזר חודשי</h2>
+  <p class="lede" style="font-size:17px">בזוכי מחיר מטרה הבנק מלווה עד הנמוך מבין שני סכומים: 75% משווי השמאי, או המחיר פחות 100 אלף ₪. אם שמאי הבנק מעריך את הדירה ב־18%–24% מעל המחיר, ההלוואה מגיעה ל־88%–93% מהמחיר. אם לא, הגבול נשאר 75% מהמחיר. הטבלה מניחה שמאות שמרנית לפי מכירות יד שנייה.</p>
+  <div class="tablewrap"><table class="data" id="fin-types"></table></div>
+  <p class="muted" style="font-size:14px">החזר לפי תמהיל ברירת המחדל: ⅓ פריים, ⅓ קבועה לא צמודה, ⅓ משתנה כל 5 שנים לא צמודה (כ־4.45%). ״הכנסה נטו נדרשת״ היא סך הנטו החודשי של כל מי שחותם על המשכנתא (אחרי מס הכנסה, ביטוח לאומי, מס בריאות ופנסיה, בערך שורת ה״נטו״ בתלוש), פחות החזרי הלוואות אחרות. ההחזר עד 40% ממנה, כפי שהבנקים עובדים בפועל. בנק ישראל מתיר עד 50%. שכר דירה עתידי מהדירה הזו בדרך כלל לא נספר.</p>
+</section>
+
+<section aria-labelledby="h-calc">
+  <h2 id="h-calc">מחשבון לדירה מסוימת</h2>
+  <div class="calc">
+    <div class="panel calc-in">
+      <label for="c-unit">דירה</label>
+      <select id="c-unit"></select>
+      <div class="grid2">
+        <div><label for="c-appr">שווי שמאי (₪)</label><input id="c-appr" type="number" step="10000" inputmode="numeric"></div>
+        <div><label for="c-eq">הון עצמי (₪)</label><input id="c-eq" type="number" step="10000" inputmode="numeric"></div>
+        <div><label for="c-term">תקופה</label><select id="c-term"><option value="25">25 שנה</option><option value="30" selected>30 שנה</option></select></div>
+        <div><label for="c-grace">בזמן הבנייה</label><select id="c-grace"><option value="interest" selected>ריבית בלבד עד המסירה</option><option value="full">החזר מלא מכל משיכה</option></select></div>
+        <div><label for="c-idx">מדד תשומות הבנייה בשנה (%)</label><input id="c-idx" type="number" step="0.1" value="3.5"></div>
+        <div><label for="c-rent">שכר דירה צפוי (₪)</label><input id="c-rent" type="number" step="100" inputmode="numeric"></div>
+      </div>
+      <table class="data tracks">
+        <thead><tr><th>מסלול</th><th>חלק %</th><th>ריבית %</th></tr></thead>
+        <tbody>
+          <tr><td>פריים (משתנה)</td><td><input id="c-s1" type="number" step="1" value="33.3" aria-label="חלק פריים"></td><td><input id="c-r1" type="number" step="0.05" value="4.10" aria-label="ריבית פריים"></td></tr>
+          <tr><td>קבועה לא צמודה</td><td><input id="c-s2" type="number" step="1" value="33.4" aria-label="חלק קבועה"></td><td><input id="c-r2" type="number" step="0.05" value="4.80" aria-label="ריבית קבועה"></td></tr>
+          <tr><td>משתנה כל 5 שנים</td><td><input id="c-s3" type="number" step="1" value="33.3" aria-label="חלק משתנה כל 5"></td><td><input id="c-r3" type="number" step="0.05" value="4.55" aria-label="ריבית משתנה כל 5"></td></tr>
+        </tbody>
+      </table>
+      <p class="muted" style="font-size:13px">ריביות ברירת מחדל: ממוצעי בנק ישראל לאוקטובר 2026, ריבית נומינלית כפי שהבנקים מציגים. לפחות שליש מההלוואה בריבית קבועה.</p>
+    </div>
+    <div class="panel calc-out" id="calc-out" aria-live="polite"></div>
+  </div>
+  <p class="muted" style="font-size:13px">אפשרות נוספת שלא מחושבת כאן: גרייס מלא, בלי תשלום בזמן הבנייה, כשהריבית מצטרפת להלוואה. עולה מעט יותר, ולא כל בנק מציע אותה.</p>
+  <h3>תזרים התשלומים לדירה הזו</h3>
+  <div class="tablewrap"><table class="data" id="calc-sched"></table></div>
+  <p class="muted" style="font-size:13px">תאריכים משוערים לפי חתימה בדצמבר 2026. ההון העצמי משולם ראשון והמשכנתא נמשכת אחריו. ההצמדה מחושבת על חצי מכל תשלום אחרי 20% הראשונים. ההחזר החודשי לא כולל הצמדה למדד במסלולים הצמודים, ולא כולל ביטוחים (כ־70–180 ₪ בחודש).</p>
+</section>
+
+<section aria-labelledby="h-carry">
+  <h2 id="h-carry">בזמן הבנייה אין שכירות</h2>
+  <p>עד המסירה (כ־9.2029, ובמציאות סוף 2029 עד אמצע 2030) אין הכנסה מהדירה, ומשלמים לבנק על מה שנמשך עד אז. בריבית בלבד ההחזר מתחיל קטן וגדל עם כל משיכה. הטבלה לפי חציון כל סוג, תמהיל ברירת המחדל, 30 שנה ומדד 3.5%.</p>
+  <div class="tablewrap"><table class="data" id="carry"></table></div>
+  <p class="muted" style="font-size:14px">הריבית עד המסירה, כ־35–75 אלף ₪, היא מחיר הקנייה על הנייר, מול פער של כ־470–520 אלף ₪. ב־3 חדרים שכר הדירה מכסה את ההחזר כמעט מהיום הראשון.</p>
+</section>
+
+<div class="cols">
+<section class="panel" aria-labelledby="h-rules">
+  <h2 id="h-rules">הכללים שחלים כאן</h2>
+  <ul class="check">
+    <li class="ok"><span><b>מימון:</b> עד 75% משווי השמאי (תקרת שווי 2.1 מ׳ ₪), ובכל מקרה לפחות 100 אלף ₪ הון עצמי. הוראה 329 של בנק ישראל מזכירה מחיר מטרה במפורש, והשימוש בשמאות במקום במחיר הוא לשיקול דעת הבנק.</span></li>
+    <li class="ok"><span><b>החזר:</b> עד 50% מההכנסה הפנויה, ובפועל הבנקים עובדים עם 40%. בתקופת גרייס הבדיקה היא לפי ההחזר שאחריה.</span></li>
+    <li class="ok"><span><b>תמהיל:</b> לפחות ⅓ בריבית קבועה, עד ⅔ משתנה. תקופה עד 30 שנה.</span></li>
+    <li class="ok"><span><b>כל בנק:</b> אפשר לקחת משכנתא בכל בנק. הבנק המלווה (מזרחי טפחות) לא יכול לסרב להעביר את ערבות חוק המכר לבנק אחר.</span></li>
+    <li class="ok"><span><b>מס רכישה:</b> 0% לדירה יחידה עד 1,978,745 ₪ (מוקפא עד ינואר 2028).</span></li>
+    <li><span><b>מענקים:</b> מענק מקום לא נראה רלוונטי, כי באר שבע לא ברשימה ובאתר ההגרלה המענק הוא 0. אפשר לוודא ב־5442*. תוכנית משכנתא בערבות מדינה לזוכים לא נמצאה ל־2026.</span></li>
+    <li><span><b>החוזה לא מותנה במשכנתא</b> (סעיף 75). איחור בתשלום עולה עד 8% ריבית שנתית (סעיף 122).</span></li>
+  </ul>
+</section>
+<section class="panel" aria-labelledby="h-costs">
+  <h2 id="h-costs">עלויות נלוות</h2>
+  <table class="data">
+    <tbody>
+      <tr><td>שכ״ט עו״ד של היזם</td><td class="n">כלול במחיר</td></tr>
+      <tr><td>עו״ד מטעמכם</td><td class="n">כ־4–8 אלף ₪ + מע״מ</td></tr>
+      <tr><td>שמאות לבנק</td><td class="n">1,200–2,000 ₪</td></tr>
+      <tr><td>פתיחת תיק משכנתא</td><td class="n">עד 360 ₪</td></tr>
+      <tr><td>רישום משכנתא</td><td class="n">200–450 ₪</td></tr>
+      <tr><td>ביטוח חיים + מבנה</td><td class="n">70–180 ₪ בחודש</td></tr>
+      <tr><td>מזגנים (לא כלולים)</td><td class="n">20–35 אלף ₪</td></tr>
+      <tr><td>דמי רצינות בבחירה</td><td class="n">2,000 ₪ (מקוזזים מהמחיר)</td></tr>
+    </tbody>
+  </table>
+  <p class="muted" style="font-size:13px">היזם משלם את מכתב ההחרגה, הערבויות, ייפוי הכוח הנוטריוני ורישום הערת האזהרה למשכנתא (סעיפים 77, 79, 99, 113).</p>
+</section>
+</div>
+
+<section class="panel" aria-labelledby="h-steps">
+  <h2 id="h-steps">מה לעשות ומתי</h2>
+  <table class="data steps">
+    <tbody>
+      <tr><td class="n">עכשיו</td><td>להגיש בקשה לאישור עקרוני ב־2–3 בנקים. התשובה תוך 5 ימי עסקים, ותנאיה מחייבים 24 יום. האישור קובע כמה אפשר ללוות, ולכן כדאי לקבל אותו לפני שמחליטים על מספר החדרים.</td></tr>
+      <tr><td class="n">עד 8.12</td><td>להכין 2,000 ₪ דמי רצינות ותעודות זהות של כל הזוכים, או ייפוי כוח אם אחד מבני הזוג לא מגיע. לפגישה יש 45 דקות.</td></tr>
+      <tr><td class="n">אחרי הבחירה</td><td>עו״ד בודק את החוזה, ובמיוחד את סעיף 68 (הצמדה) ואת סטטוס הליווי הבנקאי. החתימה תוך 30 יום לפי אתר הפרויקט, 10 ימי עבודה לפי התקנון.</td></tr>
+      <tr><td class="n">בחתימה</td><td>7% (פחות 2,000 ₪). הליווי עוד לא חתום, ולכן הכסף הולך לחשבון נאמנות (נספח ט״ו).</td></tr>
+      <tr><td class="n">משיכת משכנתא</td><td>רק אחרי חתימת החוזה ותשלום 100 אלף ₪ מההון העצמי (היזם נותן התחייבות לרישום משכנתא רק אחרי 100 אלף, סעיף 74). הבנק צריך שמאות, שוברי תשלום ומכתב החרגה מהבנק המלווה. הבנק משלם ישירות ליזם בכל מועד תשלום.</td></tr>
+      <tr><td class="n">סיכון</td><td>בלי ליווי חתום אין מכתב החרגה, והבנק עלול לא לשחרר כסף ביום 45. אם ההון העצמי קטן מ־20%, לשאול את היזם לפני 8.12 מתי ייחתם הליווי. עם 20% הון עצמי המשיכה הראשונה נדחית לחודש 7 (כ־7.2027).</td></tr>
+      <tr><td class="n">יום 45</td><td>13% נוספים, לפי פנקס השוברים, שתלוי בחתימת הליווי. אם ההון העצמי קטן מ־20% מהמחיר, המשכנתא צריכה להיות מוכנה עד אז. אחרת המשיכה הראשונה רק בחודש 7.</td></tr>
+      <tr><td class="n">3 שבועות לפני משיכה</td><td>לחדש את האישור העקרוני. את השמאות אפשר להעביר בין בנקים תוך 90 יום.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section aria-labelledby="h-money">
+  <h2 id="h-money">הצמדה ורגישות</h2>
+  <div class="cols">
+    <div class="panel">
+      <h3>תשלומים לפי החוזה</h3>
+      <table class="data">
+        <tbody>
+          <tr><td>בחתימה</td><td class="n">7%</td></tr>
+          <tr><td>תוך 45 יום</td><td class="n">13%</td></tr>
+          <tr><td>חודשים 7, 15, 22, 29</td><td class="n">4 × 17.5%</td></tr>
+          <tr><td>במסירה</td><td class="n">10%</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:14.5px">20% הראשונים לא צמודים. מכאן והלאה חצי מכל תשלום צמוד למדד תשומות הבנייה, כלומר כ־40% מהמחיר. במדד של 3.5% בשנה זה מוסיף כ־2.4% למחיר. סעיף 68 בחוזה מנוסח כאילו הכל צמוד, וכדאי לברר מול עו״ד.</p>
+    </div>
+    <div class="panel">
+      <h3>רגישות הפער (דירת 4 חד׳ טיפוסית)</h3>
+      <table class="data" id="sens"></table>
+      <p class="muted" style="font-size:14px">בפרויקטים אחים נחתמו חוזים ב־0%–8% מעל מחירי הטופס. מזגנים לא כלולים בחוזה (הכנה בלבד), כ־20–35 אלף ₪.</p>
+    </div>
+  </div>
+</section>
+<p class="foot">ניתוח עצמאי שאינו קשור ליזם, למשרד הבינוי או לבנקים. לא שמאות ולא ייעוץ משכנתא. מקורות: בנק ישראל (הוראות 329 ו־451, חוזר ח־06־2852, ריביות ממוצעות TamInt010 לאוקטובר 2026, החלטת ריבית 23.11.2026), כל זכות (מחיר מטרה), חוזה המכר של הפרויקט ונספחיו, אתר הפרויקט.</p>
+</div>
+
+<section class="panel" aria-labelledby="h-check">
+  <h2 id="h-check">לפני הבחירה ולפני החתימה</h2>
+  <ul class="check">
+    <li class="bad"><span><b>ליווי בנקאי עוד לא חתום.</b> החוזה מזכיר את מזרחי טפחות, אבל נספח ט״ו אומר שהסכם הליווי טרם נחתם. לא לשלם מעבר ל־7% הראשונים עד שמקבלים שוברי תשלום וערבות חוק מכר.</span></li>
+    <li><span><b>היתר בנייה 20242245 מ־26.10.2026</b> מופיע בחוזה. כדאי לאמת במערכת הרישוי של העירייה.</span></li>
+    <li><span><b>מסירה:</b> 1.9.2029 בחוזה. הצפי המציאותי הוא סוף 2029 עד אמצע 2030. פיצוי על איחור לפי חוק המכר, אך לא במקרה של ״כוח עליון״.</span></li>
+    <li><span><b>כיוון הדירה:</b> לבקש את תוכנית הקומה ולוודא כיוון דרום או דרום־מזרח, ושהדירה לא פונה לחניון הפתוח או לרמפה.</span></li>
+    <li><span><b>בחירה:</b> 45 דקות, דמי רצינות 2,000 ₪ (לא מוחזרים), חתימה תוך 30 יום לפי אתר הפרויקט ו־10 ימי עבודה לפי מחקר התקנון. לוודא מול החברה.</span></li>
+    <li><span><b>מכירה:</b> אסורה עד המוקדם מבין 5 שנים מטופס 4 או 7 שנים מההגרלה, כלומר עד 14.11.2029. קנס של 450 אלף ₪ על הפרה. השכרה מותרת.</span></li>
+    <li class="ok"><span><b>היזם:</b> י. אליה ובניו, קבלן ג׳־5 (בלתי מוגבל) מ־2013. לא נמצאו תביעות או עיכובים בחיפוש ברשת, אבל מאגרי בתי המשפט לא נבדקו.</span></li>
+  </ul>
+</section>
+
+<section class="foot" aria-labelledby="h-method">
+  <h3 id="h-method">שיטה ומקורות</h3>
+  <p>מחירים: טופס ג׳4 מ־16.4.2026 באתר הפרויקט, 79 דירות במחיר מטרה. שווי שוק: 1,183 עסקאות ברמות מינואר 2024 (רשות המסים דרך over.org.il ו־nadlan.gov.il). מתוכן 117 מכירות קבלן בשוק החופשי, 157 מכירות יד שנייה בבניינים שנבנו מ־2015 ו־299 עסקאות מסובסדות שהוצאו מהחישוב. לכל סוג דירה נלקח חציון 10 העסקאות הקרובות בגודל, ב־24 החודשים האחרונים. השוואה חיצונית: 263 מכירות חוזרות של מחיר למשתכן בבאר שבע. שכירות: nadlan.gov.il, מודעות ולמ״ס. הגרלה: dira.moch.gov.il, תקנון הגרלה 2149 ופרויקטים אחים במכרז 325/2021.</p>
+  <p>התאמות בין דירות: מ״ר מרפסת = ⅓ מ״ר בנוי, גינה = ¼, מחסן = ½ (מעבר למחסן טיפוסי של 6 מ״ר ב־5 חדרים), חנייה שנייה = 60 אלף ₪, קומה = +1.5% (חלופה: 0%). שבירת שוויון: בטווח של כ־20 אלף ₪ מועדפת דירה שקל יותר להשכיר ולמכור (4 חד׳, אחריהן 5 חד׳).</p>
+  <p>מגבלות: נתוני יד שנייה ל־3 חדרים דלים. פרמיית הקומה לא אוששה בנתונים המקומיים: במכירות קבלן בקומות 1–4 (135 עסקאות ב־10 קבוצות בניין וגודל) המחיר למ״ר ירד בכ־6% לקומה, כנראה כי הדירות בשוק החופשי בקומות הנמוכות הן לרוב דירות מיוחדות. זו הערכה מבוססת נתונים ולא שומה מוסמכת, ולמשכנתא תידרש שומת בנק.</p>
+</section>
+</main>
+
+<script>
+const UNITS = [{"id":"3E-13","building":3,"entrance":"E","unit_no":13,"floor":4,"floor_label":"ד","rooms":4,"area":111.4,"balcony":13.8,"garden":false,"storage":7.3,"parking":2,"price":1184718,"cost":1227987,"mv_low":1667473,"mv_mid":1812273,"mv_high":1957074,"gap_low":439486,"gap_mid":584287,"gap_high":729087,"gap_pct":32.2,"gap_alt":533250,"gap_per_equity":1.97,"equity":296179,"rank":1,"rank_alt":2,"rank_in_type":1,"yield_mid":4.46,"loc":0.5,"gap_mid_up":752334,"gap_mid_down":426026,"gap_price_up":477662,"why":{"base":475478,"floor":49484,"storage":15505,"parking":40136,"outdoor":3684},"why_alt":{"base":475478,"floor":0,"storage":14211,"parking":40136,"outdoor":3425}},{"id":"3F-13","building":3,"entrance":"F","unit_no":13,"floor":4,"floor_label":"ד","rooms":4,"area":111.4,"balcony":13.8,"garden":false,"storage":0.0,"parking":2,"price":1157091,"cost":1199700,"mv_low":1626718,"mv_mid":1767847,"mv_high":1908976,"gap_low":427018,"gap_mid":568147,"gap_high":709276,"gap_pct":32.1,"gap_alt":518404,"gap_per_equity":1.96,"equity":289273,"rank":2,"rank_alt":5,"rank_in_type":2,"yield_mid":4.56,"loc":1.5,"gap_mid_up":732074,"gap_mid_down":413766,"gap_price_up":464009,"why":{"base":474842,"floor":49484,"storage":0,"parking":40136,"outdoor":3684},"why_alt":{"base":474842,"floor":0,"storage":0,"parking":40136,"outdoor":3425}},{"id":"2C-13","building":2,"entrance":"C","unit_no":13,"floor":4,"floor_label":"ד","rooms":4,"area":111.4,"balcony":13.8,"garden":false,"storage":0.0,"parking":2,"price":1157091,"cost":1199700,"mv_low":1626718,"mv_mid":1767847,"mv_high":1908976,"gap_low":427018,"gap_mid":568147,"gap_high":709276,"gap_pct":32.1,"gap_alt":518404,"gap_per_equity":1.96,"equity":289273,"rank":3,"rank_alt":12,"rank_in_type":3,"yield_mid":4.56,"loc":-0.5,"gap_mid_up":732074,"gap_mid_down":413766,"gap_price_up":464009,"why":{"base":474842,"floor":49484,"storage":0,"parking":40136,"outdoor":3684},"why_alt":{"base":474842,"floor":0,"storage":0,"parking":40136,"outdoor":3425}},{"id":"1A-13","building":1,"entrance":"A","unit_no":13,"floor":4,"floor_label":"ד","rooms":4,"area":111.4,"balcony":13.8,"garden":false,"storage":0.0,"parking":2,"price":1157091,"cost":1199700,"mv_low":1626718,"mv_mid":1767847,"mv_high":1908976,"gap_low":427018,"gap_mid":568147,"gap_high":709276,"gap_pct":32.1,"gap_alt":518404,"gap_per_equity":1.96,"equity":289273,"rank":4,"rank_alt":14,"rank_in_type":4,"yield_mid":4.56,"loc":-1,"gap_mid_up":732074,"gap_mid_down":413766,"gap_price_up":464009,"why":{"base":474842,"floor":49484,"storage":0,"parking":40136,"outdoor":3684},"why_alt":{"base":474842,"floor":0,"storage":0,"parking":40136,"outdoor":3425}},{"id":"3E-9","building":3,"entrance":"E","unit_no":9,"floor":3,"floor_label":"ג","rooms":4,"area":111.9,"balcony":12.4,"garden":false,"storage":0.0,"parking":2,"price":1157503,"cost":1200122,"mv_low":1604959,"mv_mid":1744129,"mv_high":1883298,"gap_low":404837,"gap_mid":544006,"gap_high":683175,"gap_pct":31.2,"gap_alt":519118,"gap_per_equity":1.88,"equity":289376,"rank":5,"rank_alt":4,"rank_in_type":5,"yield_mid":4.56,"loc":0.5,"gap_mid_up":705734,"gap_mid_down":391697,"gap_price_up":439831,"why":{"base":478218,"floor":24860,"storage":0,"parking":40136,"outdoor":792},"why_alt":{"base":478218,"floor":0,"storage":0,"parking":40136,"outdoor":763}},{"id":"3F-10","building":3,"entrance":"F","unit_no":10,"floor":3,"floor_label":"ג","rooms":4,"area":111.4,"balcony":13.8,"garden":false,"storage":0.0,"parking":2,"price":1157091,"cost":1199700,"mv_low":1603901,"mv_mid":1742975,"mv_high":1882049,"gap_low":404201,"gap_mid":543275,"gap_high":682349,"gap_pct":31.2,"gap_alt":518404,"gap_per_equity":1.88,"equity":289273,"rank":6,"rank_alt":6,"rank_in_type":6,"yield_mid":4.56,"loc":1.5,"gap_mid_up":704896,"gap_mid_down":391066,"gap_price_up":439137,"why":{"base":474842,"floor":24742,"storage":0,"parking":40136,"outdoor":3555},"why_alt":{"base":474842,"floor":0,"storage":0,"parking":40136,"outdoor":3425}},{"id":"3E-10","building":3,"entrance":"E","unit_no":10,"floor":3,"floor_label":"ג","rooms":4,"area":111.4,"balcony":13.8,"garden":false,"storage":0.0,"parking":2,"price":1157091,"cost":1199700,"mv_low":1603901,"mv_mid":1742975,"mv_high":1882049,"gap_low":404201,"gap_mid":543275,"gap_high":682349,"gap_pct":31.2,"gap_alt":518404,"gap_per_equity":1.88,"equity":289273,"rank":7,"rank_alt":7,"rank_in_type":7,"yield_mid":4.56,"loc":0.5,"gap_mid_up":704896,"gap_mid_down":391066,"gap_price_up":439137,"why":{"base":474842,"floor":24742,"storage":0,"parking":40136,"outdoor":3555},"why_alt":{"base":474842,"floor":0,"storage":0,"parking":40136,"outdoor":3425}},{"id":"1B-10","building":1,"entrance":"B","unit_no":10,"floor":3,"floor_label":"ג","rooms":4,"area":111.4,"balcony":13.8,"garden":false,"storage":0.0,"parking":2,"price":1157091,"cost":1199700,"mv_low":1603901,"mv_mid":1742975,"mv_high":1882049,"gap_low":404201,"gap_mid":543275,"gap_high":682349,"gap_pct":31.2,"gap_alt":518404,"gap_per_equity":1.88,"equity":289273,"rank":8,"rank_alt":9,"rank_in_type":8,"yield_mid":4.56,"loc":0,"gap_mid_up":704896,"gap_mid_down":391066,"gap_price_up":439137,"why":{"base":474842,"floor":24742,"storage":0,"parking":40136,"outdoor":3555},"why_alt":{"base":474842,"floor":0,"storage":0,"parking":40136,"outdoor":3425}},{"id":"1A-10","building":1,"entrance":"A","unit_no":10,"floor":3,"floor_label":"ג","rooms":4,"area":111.4,"balcony":13.8,"garden":false,"storage":0.0,"parking":2,"price":1157091,"cost":1199700,"mv_low":1603901,"mv_mid":1742975,"mv_high":1882049,"gap_low":404201,"gap_mid":543275,"gap_high":682349,"gap_pct":31.2,"gap_alt":518404,"gap_per_equity":1.88,"equity":289273,"rank":9,"rank_alt":15,"rank_in_type":9,"yield_mid":4.56,"loc":-1,"gap_mid_up":704896,"gap_mid_down":391066,"gap_price_up":439137,"why":{"base":474842,"floor":24742,"storage":0,"parking":40136,"outdoor":3555},"why_alt":{"base":474842,"floor":0,"storage":0,"parking":40136,"outdoor":3425}},{"id":"2D-10","building":2,"entrance":"D","unit_no":10,"floor":3,"floor_label":"ג","rooms":4,"area":111.4,"balcony":13.8,"garden":false,"storage":0.0,"parking":2,"price":1157091,"cost":1199700,"mv_low":1603901,"mv_mid":1742975,"mv_high":1882049,"gap_low":404201,"gap_mid":543275,"gap_high":682349,"gap_pct":31.2,"gap_alt":518404,"gap_per_equity":1.88,"equity":289273,"rank":10,"rank_alt":16,"rank_in_type":10,"yield_mid":4.56,"loc":-1,"gap_mid_up":704896,"gap_mid_down":391066,"gap_price_up":439137,"why":{"base":474842,"floor":24742,"storage":0,"parking":40136,"outdoor":3555},"why_alt":{"base":474842,"floor":0,"storage":0,"parking":40136,"outdoor":3425}},{"id":"2D-12","building":2,"entrance":"D","unit_no":12,"floor":4,"floor_label":"ד","rooms":5,"area":127.6,"balcony":13.7,"garden":false,"storage":7.8,"parking":2,"price":1368795,"cost":1416456,"mv_low":1806603,"mv_mid":1964755,"mv_high":2123040,"gap_low":390146,"gap_mid":548299,"gap_high":706584,"gap_pct":27.9,"gap_alt":491073,"gap_per_equity":1.6,"equity":342199,"rank":11,"rank_alt":29,"rank_in_type":1,"yield_mid":4.38,"loc":-1,"gap_mid_up":730484,"gap_mid_down":376722,"gap_price_up":425107,"why":{"base":487230,"floor":56644,"storage":2068,"parking":0,"outdoor":2358},"why_alt":{"base":487230,"floor":0,"storage":1743,"parking":0,"outdoor":2100}},{"id":"3E-14","building":3,"entrance":"E","unit_no":14,"floor":4,"floor_label":"ד","rooms":5,"area":127.6,"balcony":13.7,"garden":false,"storage":6.9,"parking":2,"price":1364333,"cost":1411888,"mv_low":1801446,"mv_mid":1959147,"mv_high":2116980,"gap_low":389558,"gap_mid":547259,"gap_high":705092,"gap_pct":27.9,"gap_alt":490196,"gap_per_equity":1.6,"equity":341083,"rank":12,"rank_alt":33,"rank_in_type":2,"yield_mid":4.4,"loc":0.5,"gap_mid_up":728925,"gap_mid_down":376173,"gap_price_up":424469,"why":{"base":487230,"floor":56644,"storage":1028,"parking":0,"outdoor":2358},"why_alt":{"base":487230,"floor":0,"storage":867,"parking":0,"outdoor":2100}},{"id":"1B-12","building":1,"entrance":"B","unit_no":12,"floor":4,"floor_label":"ד","rooms":5,"area":127.6,"balcony":13.7,"garden":false,"storage":6.9,"parking":2,"price":1364236,"cost":1411788,"mv_low":1801334,"mv_mid":1959025,"mv_high":2116848,"gap_low":389545,"gap_mid":547236,"gap_high":705060,"gap_pct":27.9,"gap_alt":490177,"gap_per_equity":1.6,"equity":341059,"rank":13,"rank_alt":37,"rank_in_type":3,"yield_mid":4.4,"loc":0,"gap_mid_up":728891,"gap_mid_down":376161,"gap_price_up":424455,"why":{"base":487230,"floor":56644,"storage":1006,"parking":0,"outdoor":2358},"why_alt":{"base":487230,"floor":0,"storage":848,"parking":0,"outdoor":2100}},{"id":"1A-14","building":1,"entrance":"A","unit_no":14,"floor":4,"floor_label":"ד","rooms":5,"area":127.6,"balcony":13.7,"garden":false,"storage":6.0,"parking":2,"price":1359725,"cost":1407170,"mv_low":1796121,"mv_mid":1953355,"mv_high":2110722,"gap_low":388951,"gap_mid":546186,"gap_high":703552,"gap_pct":28.0,"gap_alt":489292,"gap_per_equity":1.61,"equity":339931,"rank":14,"rank_alt":43,"rank_in_type":4,"yield_mid":4.41,"loc":-1,"gap_mid_up":727314,"gap_mid_down":375605,"gap_price_up":423810,"why":{"base":487230,"floor":56644,"storage":-45,"parking":0,"outdoor":2358},"why_alt":{"base":487230,"floor":0,"storage":-38,"parking":0,"outdoor":2100}},{"id":"4H-12","building":4,"entrance":"H","unit_no":12,"floor":4,"floor_label":"ד","rooms":5,"area":126.9,"balcony":13.7,"garden":false,"storage":5.0,"parking":2,"price":1347878,"cost":1395041,"mv_low":1780949,"mv_mid":1936856,"mv_high":2092893,"gap_low":385909,"gap_mid":541815,"gap_high":697853,"gap_pct":28.0,"gap_alt":485402,"gap_per_equity":1.61,"equity":336970,"rank":15,"rank_alt":68,"rank_in_type":5,"yield_mid":4.45,"loc":0.5,"gap_mid_up":721414,"gap_mid_down":372675,"gap_price_up":420506,"why":{"base":484259,"floor":56333,"storage":-1107,"parking":0,"outdoor":2331},"why_alt":{"base":484259,"floor":0,"storage":-933,"parking":0,"outdoor":2076}},{"id":"3F-12","building":3,"entrance":"F","unit_no":12,"floor":4,"floor_label":"ד","rooms":5,"area":127.6,"balcony":13.7,"garden":false,"storage":0.0,"parking":2,"price":1330818,"cost":1377573,"mv_low":1762713,"mv_mid":1917024,"mv_high":2071463,"gap_low":385141,"gap_mid":539451,"gap_high":693891,"gap_pct":28.1,"gap_alt":483615,"gap_per_equity":1.62,"equity":332704,"rank":16,"rank_alt":76,"rank_in_type":6,"yield_mid":4.51,"loc":1.5,"gap_mid_up":717211,"gap_mid_down":372043,"gap_price_up":419677,"why":{"base":487230,"floor":56644,"storage":-6780,"parking":0,"outdoor":2358},"why_alt":{"base":487230,"floor":0,"storage":-5714,"parking":0,"outdoor":2100}},{"id":"5I-11","building":5,"entrance":"I","unit_no":11,"floor":2,"floor_label":"ב","rooms":4,"area":111.8,"balcony":13.8,"garden":false,"storage":5.1,"parking":2,"price":1180741,"cost":1223914,"mv_low":1615200,"mv_mid":1755292,"mv_high":1895383,"gap_low":391286,"gap_mid":531377,"gap_high":671469,"gap_pct":30.3,"gap_alt":531377,"gap_per_equity":1.8,"equity":295185,"rank":17,"rank_alt":3,"rank_in_type":11,"yield_mid":4.47,"loc":1,"gap_mid_up":694140,"gap_mid_down":378093,"gap_price_up":425111,"why":{"base":477900,"floor":0,"storage":9877,"parking":40136,"outdoor":3464},"why_alt":{"base":477900,"floor":0,"storage":9877,"parking":40136,"outdoor":3464}},{"id":"3E-12","building":3,"entrance":"E","unit_no":12,"floor":4,"floor_label":"ד","rooms":4,"area":111.9,"balcony":12.4,"garden":false,"storage":0.0,"parking":1,"price":1138102,"cost":1180258,"mv_low":1567791,"mv_mid":1709017,"mv_high":1850243,"gap_low":387533,"gap_mid":528759,"gap_high":669985,"gap_pct":30.9,"gap_alt":478982,"gap_per_equity":1.86,"equity":284525,"rank":18,"rank_alt":47,"rank_in_type":12,"yield_mid":4.64,"loc":0.5,"gap_mid_up":687231,"gap_mid_down":379516,"gap_price_up":426330,"why":{"base":478218,"floor":49719,"storage":0,"parking":0,"outdoor":821},"why_alt":{"base":478218,"floor":0,"storage":0,"parking":0,"outdoor":763}},{"id":"1B-14","building":1,"entrance":"B","unit_no":14,"floor":4,"floor_label":"ד","rooms":4,"area":111.9,"balcony":12.4,"garden":false,"storage":0.0,"parking":1,"price":1138102,"cost":1180258,"mv_low":1567791,"mv_mid":1709017,"mv_high":1850243,"gap_low":387533,"gap_mid":528759,"gap_high":669985,"gap_pct":30.9,"gap_alt":478982,"gap_per_equity":1.86,"equity":284525,"rank":19,"rank_alt":49,"rank_in_type":13,"yield_mid":4.64,"loc":0,"gap_mid_up":687231,"gap_mid_down":379516,"gap_price_up":426330,"why":{"base":478218,"floor":49719,"storage":0,"parking":0,"outdoor":821},"why_alt":{"base":478218,"floor":0,"storage":0,"parking":0,"outdoor":763}},{"id":"2C-12","building":2,"entrance":"C","unit_no":12,"floor":4,"floor_label":"ד","rooms":4,"area":111.9,"balcony":12.4,"garden":false,"storage":0.0,"parking":1,"price":1138102,"cost":1180258,"mv_low":1567791,"mv_mid":1709017,"mv_high":1850243,"gap_low":387533,"gap_mid":528759,"gap_high":669985,"gap_pct":30.9,"gap_alt":478982,"gap_per_equity":1.86,"equity":284525,"rank":20,"rank_alt":52,"rank_in_type":14,"yield_mid":4.64,"loc":-0.5,"gap_mid_up":687231,"gap_mid_down":379516,"gap_price_up":426330,"why":{"base":478218,"floor":49719,"storage":0,"parking":0,"outdoor":821},"why_alt":{"base":478218,"floor":0,"storage":0,"parking":0,"outdoor":763}},{"id":"1A-12","building":1,"entrance":"A","unit_no":12,"floor":4,"floor_label":"ד","rooms":4,"area":111.9,"balcony":12.4,"garden":false,"storage":0.0,"parking":1,"price":1138102,"cost":1180258,"mv_low":1567791,"mv_mid":1709017,"mv_high":1850243,"gap_low":387533,"gap_mid":528759,"gap_high":669985,"gap_pct":30.9,"gap_alt":478982,"gap_per_equity":1.86,"equity":284525,"rank":21,"rank_alt":55,"rank_in_type":15,"yield_mid":4.64,"loc":-1,"gap_mid_up":687231,"gap_mid_down":379516,"gap_price_up":426330,"why":{"base":478218,"floor":49719,"storage":0,"parking":0,"outdoor":821},"why_alt":{"base":478218,"floor":0,"storage":0,"parking":0,"outdoor":763}},{"id":"2D-14","building":2,"entrance":"D","unit_no":14,"floor":4,"floor_label":"ד","rooms":4,"area":111.9,"balcony":12.4,"garden":false,"storage":0.0,"parking":1,"price":1138102,"cost":1180258,"mv_low":1567791,"mv_mid":1709017,"mv_high":1850243,"gap_low":387533,"gap_mid":528759,"gap_high":669985,"gap_pct":30.9,"gap_alt":478982,"gap_per_equity":1.86,"equity":284525,"rank":22,"rank_alt":56,"rank_in_type":16,"yield_mid":4.64,"loc":-1,"gap_mid_up":687231,"gap_mid_down":379516,"gap_price_up":426330,"why":{"base":478218,"floor":49719,"storage":0,"parking":0,"outdoor":821},"why_alt":{"base":478218,"floor":0,"storage":0,"parking":0,"outdoor":763}},{"id":"1B-13","building":1,"entrance":"B","unit_no":13,"floor":4,"floor_label":"ד","rooms":4,"area":111.4,"balcony":13.8,"garden":false,"storage":0.0,"parking":1,"price":1137690,"cost":1179836,"mv_low":1566718,"mv_mid":1707847,"mv_high":1848976,"gap_low":386882,"gap_mid":528011,"gap_high":669140,"gap_pct":30.9,"gap_alt":478268,"gap_per_equity":1.86,"equity":284422,"rank":23,"rank_alt":64,"rank_in_type":17,"yield_mid":4.64,"loc":0,"gap_mid_up":686374,"gap_mid_down":378870,"gap_price_up":425619,"why":{"base":474842,"floor":49484,"storage":0,"parking":0,"outdoor":3684},"why_alt":{"base":474842,"floor":0,"storage":0,"parking":0,"outdoor":3425}},{"id":"2D-13","building":2,"entrance":"D","unit_no":13,"floor":4,"floor_label":"ד","rooms":4,"area":111.4,"balcony":13.8,"garden":false,"storage":0.0,"parking":1,"price":1137690,"cost":1179836,"mv_low":1566718,"mv_mid":1707847,"mv_high":1848976,"gap_low":386882,"gap_mid":528011,"gap_high":669140,"gap_pct":30.9,"gap_alt":478268,"gap_per_equity":1.86,"equity":284422,"rank":24,"rank_alt":67,"rank_in_type":18,"yield_mid":4.64,"loc":-1,"gap_mid_up":686374,"gap_mid_down":378870,"gap_price_up":425619,"why":{"base":474842,"floor":49484,"storage":0,"parking":0,"outdoor":3684},"why_alt":{"base":474842,"floor":0,"storage":0,"parking":0,"outdoor":3425}},{"id":"5I-15","building":5,"entrance":"I","unit_no":15,"floor":3,"floor_label":"ג","rooms":3,"area":82.6,"balcony":13.4,"garden":false,"storage":5.9,"parking":1,"price":882517,"cost":918575,"mv_low":1308342,"mv_mid":1457124,"mv_high":1605992,"gap_low":389768,"gap_mid":538549,"gap_high":687418,"gap_pct":37.0,"gap_alt":517016,"gap_per_equity":2.44,"equity":220629,"rank":25,"rank_alt":19,"rank_in_type":1,"yield_mid":5.03,"loc":1,"gap_mid_up":673664,"gap_mid_down":411303,"gap_price_up":459123,"why":{"base":497172,"floor":20823,"storage":16875,"parking":0,"outdoor":3680},"why_alt":{"base":497172,"floor":0,"storage":16278,"parking":0,"outdoor":3566}},{"id":"3E-7","building":3,"entrance":"E","unit_no":7,"floor":2,"floor_label":"ב","rooms":4,"area":111.4,"balcony":13.8,"garden":false,"storage":0.0,"parking":2,"price":1157091,"cost":1199700,"mv_low":1581085,"mv_mid":1718104,"mv_high":1855122,"gap_low":381385,"gap_mid":518404,"gap_high":655422,"gap_pct":30.2,"gap_alt":518404,"gap_per_equity":1.79,"equity":289273,"rank":26,"rank_alt":8,"rank_in_type":19,"yield_mid":4.56,"loc":0.5,"gap_mid_up":677718,"gap_mid_down":368367,"gap_price_up":414265,"why":{"base":474842,"floor":0,"storage":0,"parking":40136,"outdoor":3425},"why_alt":{"base":474842,"floor":0,"storage":0,"parking":40136,"outdoor":3425}},{"id":"1B-7","building":1,"entrance":"B","unit_no":7,"floor":2,"floor_label":"ב","rooms":4,"area":111.4,"balcony":13.8,"garden":false,"storage":0.0,"parking":2,"price":1157091,"cost":1199700,"mv_low":1581085,"mv_mid":1718104,"mv_high":1855122,"gap_low":381385,"gap_mid":518404,"gap_high":655422,"gap_pct":30.2,"gap_alt":518404,"gap_per_equity":1.79,"equity":289273,"rank":27,"rank_alt":10,"rank_in_type":20,"yield_mid":4.56,"loc":0,"gap_mid_up":677718,"gap_mid_down":368367,"gap_price_up":414265,"why":{"base":474842,"floor":0,"storage":0,"parking":40136,"outdoor":3425},"why_alt":{"base":474842,"floor":0,"storage":0,"parking":40136,"outdoor":3425}},{"id":"2C-7","building":2,"entrance":"C","unit_no":7,"floor":2,"floor_label":"ב","rooms":4,"area":111.4,"balcony":13.8,"garden":false,"storage":0.0,"parking":2,"price":1157091,"cost":1199700,"mv_low":1581085,"mv_mid":1718104,"mv_high":1855122,"gap_low":381385,"gap_mid":518404,"gap_high":655422,"gap_pct":30.2,"gap_alt":518404,"gap_per_equity":1.79,"equity":289273,"rank":28,"rank_alt":13,"rank_in_type":21,"yield_mid":4.56,"loc":-0.5,"gap_mid_up":677718,"gap_mid_down":368367,"gap_price_up":414265,"why":{"base":474842,"floor":0,"storage":0,"parking":40136,"outdoor":3425},"why_alt":{"base":474842,"floor":0,"storage":0,"parking":40136,"outdoor":3425}},{"id":"2D-7","building":2,"entrance":"D","unit_no":7,"floor":2,"floor_label":"ב","rooms":4,"area":111.4,"balcony":13.8,"garden":false,"storage":0.0,"parking":2,"price":1157091,"cost":1199700,"mv_low":1581085,"mv_mid":1718104,"mv_high":1855122,"gap_low":381385,"gap_mid":518404,"gap_high":655422,"gap_pct":30.2,"gap_alt":518404,"gap_per_equity":1.79,"equity":289273,"rank":29,"rank_alt":17,"rank_in_type":22,"yield_mid":4.56,"loc":-1,"gap_mid_up":677718,"gap_mid_down":368367,"gap_price_up":414265,"why":{"base":474842,"floor":0,"storage":0,"parking":40136,"outdoor":3425},"why_alt":{"base":474842,"floor":0,"storage":0,"parking":40136,"outdoor":3425}},{"id":"2D-9","building":2,"entrance":"D","unit_no":9,"floor":3,"floor_label":"ג","rooms":5,"area":127.6,"balcony":13.7,"garden":false,"storage":8.1,"parking":2,"price":1369911,"cost":1417599,"mv_low":1781563,"mv_mid":1937524,"mv_high":2093615,"gap_low":363965,"gap_mid":519925,"gap_high":676016,"gap_pct":26.8,"gap_alt":491292,"gap_per_equity":1.52,"equity":342478,"rank":30,"rank_alt":28,"rank_in_type":7,"yield_mid":4.38,"loc":-1,"gap_mid_up":699586,"gap_mid_down":350727,"gap_price_up":396633,"why":{"base":487230,"floor":28322,"storage":2145,"parking":0,"outdoor":2229},"why_alt":{"base":487230,"floor":0,"storage":1962,"parking":0,"outdoor":2100}},{"id":"3E-11","building":3,"entrance":"E","unit_no":11,"floor":3,"floor_label":"ג","rooms":5,"area":127.6,"balcony":13.7,"garden":false,"storage":6.9,"parking":2,"price":1364284,"cost":1411838,"mv_low":1775156,"mv_mid":1930555,"mv_high":2086085,"gap_low":363318,"gap_mid":518717,"gap_high":674247,"gap_pct":26.9,"gap_alt":490187,"gap_per_equity":1.52,"equity":341071,"rank":31,"rank_alt":34,"rank_in_type":8,"yield_mid":4.4,"loc":0.5,"gap_mid_up":697732,"gap_mid_down":350128,"gap_price_up":395932,"why":{"base":487230,"floor":28322,"storage":937,"parking":0,"outdoor":2229},"why_alt":{"base":487230,"floor":0,"storage":857,"parking":0,"outdoor":2100}},{"id":"1B-9","building":1,"entrance":"B","unit_no":9,"floor":3,"floor_label":"ג","rooms":5,"area":127.6,"balcony":13.7,"garden":false,"storage":6.9,"parking":2,"price":1364284,"cost":1411838,"mv_low":1775156,"mv_mid":1930555,"mv_high":2086085,"gap_low":363318,"gap_mid":518717,"gap_high":674247,"gap_pct":26.9,"gap_alt":490187,"gap_per_equity":1.52,"equity":341071,"rank":32,"rank_alt":35,"rank_in_type":9,"yield_mid":4.4,"loc":0,"gap_mid_up":697732,"gap_mid_down":350128,"gap_price_up":395932,"why":{"base":487230,"floor":28322,"storage":937,"parking":0,"outdoor":2229},"why_alt":{"base":487230,"floor":0,"storage":857,"parking":0,"outdoor":2100}},{"id":"2C-11","building":2,"entrance":"C","unit_no":11,"floor":3,"floor_label":"ג","rooms":5,"area":127.6,"balcony":13.7,"garden":false,"storage":6.9,"parking":2,"price":1364284,"cost":1411838,"mv_low":1775156,"mv_mid":1930555,"mv_high":2086085,"gap_low":363318,"gap_mid":518717,"gap_high":674247,"gap_pct":26.9,"gap_alt":490187,"gap_per_equity":1.52,"equity":341071,"rank":33,"rank_alt":36,"rank_in_type":10,"yield_mid":4.4,"loc":-0.5,"gap_mid_up":697732,"gap_mid_down":350128,"gap_price_up":395932,"why":{"base":487230,"floor":28322,"storage":937,"parking":0,"outdoor":2229},"why_alt":{"base":487230,"floor":0,"storage":857,"parking":0,"outdoor":2100}},{"id":"1A-11","building":1,"entrance":"A","unit_no":11,"floor":3,"floor_label":"ג","rooms":5,"area":127.6,"balcony":13.7,"garden":false,"storage":6.4,"parking":2,"price":1361859,"cost":1409355,"mv_low":1772394,"mv_mid":1927552,"mv_high":2082840,"gap_low":363039,"gap_mid":518197,"gap_high":673485,"gap_pct":26.9,"gap_alt":489711,"gap_per_equity":1.52,"equity":340465,"rank":34,"rank_alt":41,"rank_in_type":11,"yield_mid":4.41,"loc":-1,"gap_mid_up":696933,"gap_mid_down":349869,"gap_price_up":395629,"why":{"base":487230,"floor":28322,"storage":416,"parking":0,"outdoor":2229},"why_alt":{"base":487230,"floor":0,"storage":381,"parking":0,"outdoor":2100}},{"id":"3F-9","building":3,"entrance":"F","unit_no":9,"floor":3,"floor_label":"ג","rooms":5,"area":127.6,"balcony":13.7,"garden":false,"storage":6.3,"parking":2,"price":1361423,"cost":1408908,"mv_low":1771897,"mv_mid":1927011,"mv_high":2082256,"gap_low":362989,"gap_mid":518103,"gap_high":673347,"gap_pct":26.9,"gap_alt":489625,"gap_per_equity":1.52,"equity":340356,"rank":35,"rank_alt":42,"rank_in_type":12,"yield_mid":4.41,"loc":1.5,"gap_mid_up":696789,"gap_mid_down":349823,"gap_price_up":395575,"why":{"base":487230,"floor":28322,"storage":323,"parking":0,"outdoor":2229},"why_alt":{"base":487230,"floor":0,"storage":295,"parking":0,"outdoor":2100}},{"id":"5I-8","building":5,"entrance":"I","unit_no":8,"floor":1,"floor_label":"א","rooms":5,"area":140.8,"balcony":13.8,"garden":false,"storage":6.2,"parking":2,"price":1496830,"cost":1547547,"mv_low":1895640,"mv_mid":2061587,"mv_high":2227674,"gap_low":348094,"gap_mid":514041,"gap_high":680127,"gap_pct":24.9,"gap_alt":545436,"gap_per_equity":1.37,"equity":374208,"rank":36,"rank_alt":1,"rank_in_type":13,"yield_mid":4.01,"loc":1,"gap_mid_up":705206,"gap_mid_down":334009,"gap_price_up":379326,"why":{"base":543071,"floor":-31242,"storage":207,"parking":0,"outdoor":2005},"why_alt":{"base":543071,"floor":0,"storage":229,"parking":0,"outdoor":2136}},{"id":"4H-10","building":4,"entrance":"H","unit_no":10,"floor":3,"floor_label":"ג","rooms":5,"area":126.9,"balcony":13.7,"garden":false,"storage":4.5,"parking":2,"price":1345545,"cost":1392652,"mv_low":1752306,"mv_mid":1905706,"mv_high":2059234,"gap_low":359655,"gap_mid":513054,"gap_high":666582,"gap_pct":26.9,"gap_alt":484891,"gap_per_equity":1.53,"equity":336386,"rank":37,"rank_alt":69,"rank_in_type":14,"yield_mid":4.46,"loc":0.5,"gap_mid_up":689764,"gap_mid_down":346634,"gap_price_up":391955,"why":{"base":484215,"floor":28166,"storage":-1531,"parking":0,"outdoor":2203},"why_alt":{"base":484215,"floor":0,"storage":-1400,"parking":0,"outdoor":2076}},{"id":"3F-11","building":3,"entrance":"F","unit_no":11,"floor":3,"floor_label":"ג","rooms":4,"area":111.9,"balcony":12.4,"garden":false,"storage":0.0,"parking":1,"price":1138102,"cost":1180258,"mv_low":1544959,"mv_mid":1684129,"mv_high":1823298,"gap_low":364701,"gap_mid":503870,"gap_high":643039,"gap_pct":29.9,"gap_alt":478982,"gap_per_equity":1.77,"equity":284525,"rank":38,"rank_alt":45,"rank_in_type":23,"yield_mid":4.64,"loc":1.5,"gap_mid_up":660035,"gap_mid_down":356800,"gap_price_up":401441,"why":{"base":478218,"floor":24860,"storage":0,"parking":0,"outdoor":792},"why_alt":{"base":478218,"floor":0,"storage":0,"parking":0,"outdoor":763}},{"id":"1B-11","building":1,"entrance":"B","unit_no":11,"floor":3,"floor_label":"ג","rooms":4,"area":111.9,"balcony":12.4,"garden":false,"storage":0.0,"parking":1,"price":1138102,"cost":1180258,"mv_low":1544959,"mv_mid":1684129,"mv_high":1823298,"gap_low":364701,"gap_mid":503870,"gap_high":643039,"gap_pct":29.9,"gap_alt":478982,"gap_per_equity":1.77,"equity":284525,"rank":39,"rank_alt":50,"rank_in_type":24,"yield_mid":4.64,"loc":0,"gap_mid_up":660035,"gap_mid_down":356800,"gap_price_up":401441,"why":{"base":478218,"floor":24860,"storage":0,"parking":0,"outdoor":792},"why_alt":{"base":478218,"floor":0,"storage":0,"parking":0,"outdoor":763}},{"id":"2C-9","building":2,"entrance":"C","unit_no":9,"floor":3,"floor_label":"ג","rooms":4,"area":111.9,"balcony":12.4,"garden":false,"storage":0.0,"parking":1,"price":1138102,"cost":1180258,"mv_low":1544959,"mv_mid":1684129,"mv_high":1823298,"gap_low":364701,"gap_mid":503870,"gap_high":643039,"gap_pct":29.9,"gap_alt":478982,"gap_per_equity":1.77,"equity":284525,"rank":40,"rank_alt":53,"rank_in_type":25,"yield_mid":4.64,"loc":-0.5,"gap_mid_up":660035,"gap_mid_down":356800,"gap_price_up":401441,"why":{"base":478218,"floor":24860,"storage":0,"parking":0,"outdoor":792},"why_alt":{"base":478218,"floor":0,"storage":0,"parking":0,"outdoor":763}},{"id":"1A-9","building":1,"entrance":"A","unit_no":9,"floor":3,"floor_label":"ג","rooms":4,"area":111.9,"balcony":12.4,"garden":false,"storage":0.0,"parking":1,"price":1138102,"cost":1180258,"mv_low":1544959,"mv_mid":1684129,"mv_high":1823298,"gap_low":364701,"gap_mid":503870,"gap_high":643039,"gap_pct":29.9,"gap_alt":478982,"gap_per_equity":1.77,"equity":284525,"rank":41,"rank_alt":57,"rank_in_type":26,"yield_mid":4.64,"loc":-1,"gap_mid_up":660035,"gap_mid_down":356800,"gap_price_up":401441,"why":{"base":478218,"floor":24860,"storage":0,"parking":0,"outdoor":792},"why_alt":{"base":478218,"floor":0,"storage":0,"parking":0,"outdoor":763}},{"id":"2D-11","building":2,"entrance":"D","unit_no":11,"floor":3,"floor_label":"ג","rooms":4,"area":111.9,"balcony":12.4,"garden":false,"storage":0.0,"parking":1,"price":1138102,"cost":1180258,"mv_low":1544959,"mv_mid":1684129,"mv_high":1823298,"gap_low":364701,"gap_mid":503870,"gap_high":643039,"gap_pct":29.9,"gap_alt":478982,"gap_per_equity":1.77,"equity":284525,"rank":42,"rank_alt":58,"rank_in_type":27,"yield_mid":4.64,"loc":-1,"gap_mid_up":660035,"gap_mid_down":356800,"gap_price_up":401441,"why":{"base":478218,"floor":24860,"storage":0,"parking":0,"outdoor":792},"why_alt":{"base":478218,"floor":0,"storage":0,"parking":0,"outdoor":763}},{"id":"2C-10","building":2,"entrance":"C","unit_no":10,"floor":3,"floor_label":"ג","rooms":4,"area":111.4,"balcony":13.8,"garden":false,"storage":0.0,"parking":1,"price":1137690,"cost":1179836,"mv_low":1543901,"mv_mid":1682975,"mv_high":1822049,"gap_low":364065,"gap_mid":503139,"gap_high":642213,"gap_pct":29.9,"gap_alt":478268,"gap_per_equity":1.77,"equity":284422,"rank":43,"rank_alt":65,"rank_in_type":28,"yield_mid":4.64,"loc":-0.5,"gap_mid_up":659196,"gap_mid_down":356170,"gap_price_up":400747,"why":{"base":474842,"floor":24742,"storage":0,"parking":0,"outdoor":3555},"why_alt":{"base":474842,"floor":0,"storage":0,"parking":0,"outdoor":3425}},{"id":"5I-12","building":5,"entrance":"I","unit_no":12,"floor":2,"floor_label":"ב","rooms":3,"area":82.3,"balcony":13.4,"garden":false,"storage":6.5,"parking":1,"price":881876,"cost":917919,"mv_low":1288011,"mv_mid":1434481,"mv_high":1581036,"gap_low":370092,"gap_mid":516562,"gap_high":663117,"gap_pct":36.0,"gap_alt":516562,"gap_per_equity":2.34,"equity":220469,"rank":44,"rank_alt":20,"rank_in_type":2,"yield_mid":5.03,"loc":1,"gap_mid_up":649577,"gap_mid_down":391293,"gap_price_up":437193,"why":{"base":495179,"floor":0,"storage":17817,"parking":0,"outdoor":3566},"why_alt":{"base":495179,"floor":0,"storage":17817,"parking":0,"outdoor":3566}},{"id":"1B-4","building":1,"entrance":"B","unit_no":4,"floor":1,"floor_label":"א","rooms":4,"area":111.4,"balcony":13.8,"garden":false,"storage":0.0,"parking":2,"price":1157091,"cost":1199700,"mv_low":1558269,"mv_mid":1693232,"mv_high":1828196,"gap_low":358569,"gap_mid":493532,"gap_high":628495,"gap_pct":29.1,"gap_alt":518404,"gap_per_equity":1.71,"equity":289273,"rank":45,"rank_alt":11,"rank_in_type":29,"yield_mid":4.56,"loc":0,"gap_mid_up":650540,"gap_mid_down":345667,"gap_price_up":389394,"why":{"base":474842,"floor":-24742,"storage":0,"parking":40136,"outdoor":3296},"why_alt":{"base":474842,"floor":0,"storage":0,"parking":40136,"outdoor":3425}},{"id":"2D-4","building":2,"entrance":"D","unit_no":4,"floor":1,"floor_label":"א","rooms":4,"area":111.4,"balcony":13.8,"garden":false,"storage":0.0,"parking":2,"price":1157091,"cost":1199700,"mv_low":1558269,"mv_mid":1693232,"mv_high":1828196,"gap_low":358569,"gap_mid":493532,"gap_high":628495,"gap_pct":29.1,"gap_alt":518404,"gap_per_equity":1.71,"equity":289273,"rank":46,"rank_alt":18,"rank_in_type":30,"yield_mid":4.56,"loc":-1,"gap_mid_up":650540,"gap_mid_down":345667,"gap_price_up":389394,"why":{"base":474842,"floor":-24742,"storage":0,"parking":40136,"outdoor":3296},"why_alt":{"base":474842,"floor":0,"storage":0,"parking":40136,"outdoor":3425}},{"id":"5I-10","building":5,"entrance":"I","unit_no":10,"floor":2,"floor_label":"ב","rooms":5,"area":129.0,"balcony":13.6,"garden":false,"storage":7.3,"parking":2,"price":1380121,"cost":1428052,"mv_low":1769475,"mv_mid":1924377,"mv_high":2079409,"gap_low":341423,"gap_mid":496325,"gap_high":651357,"gap_pct":25.8,"gap_alt":496325,"gap_per_equity":1.44,"equity":345030,"rank":47,"rank_alt":23,"rank_in_type":15,"yield_mid":4.35,"loc":1,"gap_mid_up":674767,"gap_mid_down":328275,"gap_price_up":372114,"why":{"base":493170,"floor":0,"storage":1248,"parking":0,"outdoor":1907},"why_alt":{"base":493170,"floor":0,"storage":1248,"parking":0,"outdoor":1907}},{"id":"5I-9","building":5,"entrance":"I","unit_no":9,"floor":2,"floor_label":"ב","rooms":5,"area":128.9,"balcony":13.6,"garden":false,"storage":6.6,"parking":2,"price":1375428,"cost":1423247,"mv_low":1763969,"mv_mid":1918389,"mv_high":2072939,"gap_low":340722,"gap_mid":495142,"gap_high":649692,"gap_pct":25.8,"gap_alt":495142,"gap_per_equity":1.44,"equity":343857,"rank":48,"rank_alt":25,"rank_in_type":16,"yield_mid":4.36,"loc":1,"gap_mid_up":673028,"gap_mid_down":327615,"gap_price_up":371353,"why":{"base":492661,"floor":0,"storage":562,"parking":0,"outdoor":1919},"why_alt":{"base":492661,"floor":0,"storage":562,"parking":0,"outdoor":1919}},{"id":"1A-8","building":1,"entrance":"A","unit_no":8,"floor":2,"floor_label":"ב","rooms":5,"area":127.8,"balcony":13.7,"garden":false,"storage":6.9,"parking":2,"price":1366152,"cost":1413750,"mv_low":1751425,"mv_mid":1904747,"mv_high":2058198,"gap_low":337675,"gap_mid":490997,"gap_high":644448,"gap_pct":25.8,"gap_alt":490997,"gap_per_equity":1.44,"equity":341538,"rank":49,"rank_alt":30,"rank_in_type":17,"yield_mid":4.39,"loc":-1,"gap_mid_up":667619,"gap_mid_down":324662,"gap_price_up":368044,"why":{"base":488078,"floor":0,"storage":819,"parking":0,"outdoor":2100},"why_alt":{"base":488078,"floor":0,"storage":819,"parking":0,"outdoor":2100}},{"id":"2D-6","building":2,"entrance":"D","unit_no":6,"floor":2,"floor_label":"ב","rooms":5,"area":127.6,"balcony":13.7,"garden":false,"storage":7.2,"parking":2,"price":1365594,"cost":1413179,"mv_low":1750391,"mv_mid":1903623,"mv_high":2056983,"gap_low":337212,"gap_mid":490444,"gap_high":643804,"gap_pct":25.8,"gap_alt":490444,"gap_per_equity":1.44,"equity":341399,"rank":50,"rank_alt":31,"rank_in_type":18,"yield_mid":4.39,"loc":-1,"gap_mid_up":666961,"gap_mid_down":324206,"gap_price_up":367541,"why":{"base":487230,"floor":0,"storage":1114,"parking":0,"outdoor":2100},"why_alt":{"base":487230,"floor":0,"storage":1114,"parking":0,"outdoor":2100}},{"id":"3E-8","building":3,"entrance":"E","unit_no":8,"floor":2,"floor_label":"ב","rooms":5,"area":127.6,"balcony":13.7,"garden":false,"storage":6.9,"parking":2,"price":1364187,"cost":1411739,"mv_low":1748813,"mv_mid":1901907,"mv_high":2055129,"gap_low":337074,"gap_mid":490168,"gap_high":643390,"gap_pct":25.8,"gap_alt":490168,"gap_per_equity":1.44,"equity":341047,"rank":51,"rank_alt":38,"rank_in_type":19,"yield_mid":4.4,"loc":0.5,"gap_mid_up":666526,"gap_mid_down":324080,"gap_price_up":367391,"why":{"base":487230,"floor":0,"storage":838,"parking":0,"outdoor":2100},"why_alt":{"base":487230,"floor":0,"storage":838,"parking":0,"outdoor":2100}},{"id":"2C-8","building":2,"entrance":"C","unit_no":8,"floor":2,"floor_label":"ב","rooms":5,"area":127.6,"balcony":13.7,"garden":false,"storage":6.6,"parking":2,"price":1362781,"cost":1410299,"mv_low":1747235,"mv_mid":1900190,"mv_high":2053274,"gap_low":336936,"gap_mid":489892,"gap_high":642975,"gap_pct":25.8,"gap_alt":489892,"gap_per_equity":1.44,"equity":340695,"rank":52,"rank_alt":39,"rank_in_type":20,"yield_mid":4.4,"loc":-0.5,"gap_mid_up":666091,"gap_mid_down":323954,"gap_price_up":367241,"why":{"base":487230,"floor":0,"storage":562,"parking":0,"outdoor":2100},"why_alt":{"base":487230,"floor":0,"storage":562,"parking":0,"outdoor":2100}},{"id":"1B-6","building":1,"entrance":"B","unit_no":6,"floor":2,"floor_label":"ב","rooms":5,"area":127.6,"balcony":13.7,"garden":false,"storage":6.4,"parking":2,"price":1361859,"cost":1409355,"mv_low":1746201,"mv_mid":1899066,"mv_high":2052059,"gap_low":336846,"gap_mid":489711,"gap_high":642704,"gap_pct":25.8,"gap_alt":489711,"gap_per_equity":1.44,"equity":340465,"rank":53,"rank_alt":40,"rank_in_type":21,"yield_mid":4.41,"loc":0,"gap_mid_up":665805,"gap_mid_down":323871,"gap_price_up":367143,"why":{"base":487230,"floor":0,"storage":381,"parking":0,"outdoor":2100},"why_alt":{"base":487230,"floor":0,"storage":381,"parking":0,"outdoor":2100}},{"id":"4H-8","building":4,"entrance":"H","unit_no":8,"floor":2,"floor_label":"ב","rooms":5,"area":127.2,"balcony":13.7,"garden":false,"storage":6.9,"parking":2,"price":1359731,"cost":1407176,"mv_low":1742927,"mv_mid":1895505,"mv_high":2048211,"gap_low":335751,"gap_mid":488329,"gap_high":641035,"gap_pct":25.8,"gap_alt":488329,"gap_per_equity":1.44,"equity":339933,"rank":54,"rank_alt":44,"rank_in_type":22,"yield_mid":4.41,"loc":0.5,"gap_mid_up":664093,"gap_mid_down":322800,"gap_price_up":365953,"why":{"base":485405,"floor":0,"storage":848,"parking":0,"outdoor":2076},"why_alt":{"base":485405,"floor":0,"storage":848,"parking":0,"outdoor":2076}},{"id":"3F-8","building":3,"entrance":"F","unit_no":8,"floor":2,"floor_label":"ב","rooms":4,"area":111.9,"balcony":12.4,"garden":false,"storage":0.0,"parking":1,"price":1138102,"cost":1180258,"mv_low":1522128,"mv_mid":1659240,"mv_high":1796353,"gap_low":341869,"gap_mid":478982,"gap_high":616094,"gap_pct":28.9,"gap_alt":478982,"gap_per_equity":1.68,"equity":284525,"rank":55,"rank_alt":46,"rank_in_type":31,"yield_mid":4.64,"loc":1.5,"gap_mid_up":632838,"gap_mid_down":334085,"gap_price_up":376553,"why":{"base":478218,"floor":0,"storage":0,"parking":0,"outdoor":763},"why_alt":{"base":478218,"floor":0,"storage":0,"parking":0,"outdoor":763}},{"id":"3E-6","building":3,"entrance":"E","unit_no":6,"floor":2,"floor_label":"ב","rooms":4,"area":111.9,"balcony":12.4,"garden":false,"storage":0.0,"parking":1,"price":1138102,"cost":1180258,"mv_low":1522128,"mv_mid":1659240,"mv_high":1796353,"gap_low":341869,"gap_mid":478982,"gap_high":616094,"gap_pct":28.9,"gap_alt":478982,"gap_per_equity":1.68,"equity":284525,"rank":56,"rank_alt":48,"rank_in_type":32,"yield_mid":4.64,"loc":0.5,"gap_mid_up":632838,"gap_mid_down":334085,"gap_price_up":376553,"why":{"base":478218,"floor":0,"storage":0,"parking":0,"outdoor":763},"why_alt":{"base":478218,"floor":0,"storage":0,"parking":0,"outdoor":763}},{"id":"1B-8","building":1,"entrance":"B","unit_no":8,"floor":2,"floor_label":"ב","rooms":4,"area":111.9,"balcony":12.4,"garden":false,"storage":0.0,"parking":1,"price":1138102,"cost":1180258,"mv_low":1522128,"mv_mid":1659240,"mv_high":1796353,"gap_low":341869,"gap_mid":478982,"gap_high":616094,"gap_pct":28.9,"gap_alt":478982,"gap_per_equity":1.68,"equity":284525,"rank":57,"rank_alt":51,"rank_in_type":33,"yield_mid":4.64,"loc":0,"gap_mid_up":632838,"gap_mid_down":334085,"gap_price_up":376553,"why":{"base":478218,"floor":0,"storage":0,"parking":0,"outdoor":763},"why_alt":{"base":478218,"floor":0,"storage":0,"parking":0,"outdoor":763}},{"id":"2C-6","building":2,"entrance":"C","unit_no":6,"floor":2,"floor_label":"ב","rooms":4,"area":111.9,"balcony":12.4,"garden":false,"storage":0.0,"parking":1,"price":1138102,"cost":1180258,"mv_low":1522128,"mv_mid":1659240,"mv_high":1796353,"gap_low":341869,"gap_mid":478982,"gap_high":616094,"gap_pct":28.9,"gap_alt":478982,"gap_per_equity":1.68,"equity":284525,"rank":58,"rank_alt":54,"rank_in_type":34,"yield_mid":4.64,"loc":-0.5,"gap_mid_up":632838,"gap_mid_down":334085,"gap_price_up":376553,"why":{"base":478218,"floor":0,"storage":0,"parking":0,"outdoor":763},"why_alt":{"base":478218,"floor":0,"storage":0,"parking":0,"outdoor":763}},{"id":"2D-8","building":2,"entrance":"D","unit_no":8,"floor":2,"floor_label":"ב","rooms":4,"area":111.9,"balcony":12.4,"garden":false,"storage":0.0,"parking":1,"price":1138102,"cost":1180258,"mv_low":1522128,"mv_mid":1659240,"mv_high":1796353,"gap_low":341869,"gap_mid":478982,"gap_high":616094,"gap_pct":28.9,"gap_alt":478982,"gap_per_equity":1.68,"equity":284525,"rank":59,"rank_alt":59,"rank_in_type":35,"yield_mid":4.64,"loc":-1,"gap_mid_up":632838,"gap_mid_down":334085,"gap_price_up":376553,"why":{"base":478218,"floor":0,"storage":0,"parking":0,"outdoor":763},"why_alt":{"base":478218,"floor":0,"storage":0,"parking":0,"outdoor":763}},{"id":"3F-7","building":3,"entrance":"F","unit_no":7,"floor":2,"floor_label":"ב","rooms":4,"area":111.4,"balcony":13.8,"garden":false,"storage":0.0,"parking":1,"price":1137690,"cost":1179836,"mv_low":1521085,"mv_mid":1658104,"mv_high":1795122,"gap_low":341249,"gap_mid":478268,"gap_high":615286,"gap_pct":28.8,"gap_alt":478268,"gap_per_equity":1.68,"equity":284422,"rank":60,"rank_alt":61,"rank_in_type":36,"yield_mid":4.64,"loc":1.5,"gap_mid_up":632019,"gap_mid_down":333470,"gap_price_up":375876,"why":{"base":474842,"floor":0,"storage":0,"parking":0,"outdoor":3425},"why_alt":{"base":474842,"floor":0,"storage":0,"parking":0,"outdoor":3425}},{"id":"3F-6","building":3,"entrance":"F","unit_no":6,"floor":2,"floor_label":"ב","rooms":5,"area":127.6,"balcony":13.7,"garden":false,"storage":0.0,"parking":2,"price":1330818,"cost":1377573,"mv_low":1711372,"mv_mid":1861188,"mv_high":2011130,"gap_low":333800,"gap_mid":483615,"gap_high":633557,"gap_pct":26.0,"gap_alt":483615,"gap_per_equity":1.45,"equity":332704,"rank":61,"rank_alt":77,"rank_in_type":23,"yield_mid":4.51,"loc":1.5,"gap_mid_up":656198,"gap_mid_down":321083,"gap_price_up":363842,"why":{"base":487230,"floor":0,"storage":-5714,"parking":0,"outdoor":2100},"why_alt":{"base":487230,"floor":0,"storage":-5714,"parking":0,"outdoor":2100}},{"id":"1A-6","building":1,"entrance":"A","unit_no":6,"floor":2,"floor_label":"ב","rooms":5,"area":126.4,"balcony":12.4,"garden":false,"storage":0.0,"parking":2,"price":1313435,"cost":1359776,"mv_low":1688788,"mv_mid":1836627,"mv_high":1984590,"gap_low":329013,"gap_mid":476852,"gap_high":624815,"gap_pct":26.0,"gap_alt":476852,"gap_per_equity":1.45,"equity":328359,"rank":62,"rank_alt":78,"rank_in_type":24,"yield_mid":4.57,"loc":-1,"gap_mid_up":647157,"gap_mid_down":316464,"gap_price_up":358642,"why":{"base":482095,"floor":0,"storage":-5714,"parking":0,"outdoor":471},"why_alt":{"base":482095,"floor":0,"storage":-5714,"parking":0,"outdoor":471}},{"id":"1A-7","building":1,"entrance":"A","unit_no":7,"floor":2,"floor_label":"ב","rooms":3,"area":79.8,"balcony":13.8,"garden":false,"storage":0.0,"parking":1,"price":833810,"cost":868706,"mv_low":1213436,"mv_mid":1351425,"mv_high":1489495,"gap_low":344730,"gap_mid":482719,"gap_high":620789,"gap_pct":35.7,"gap_alt":482719,"gap_per_equity":2.32,"equity":208453,"rank":63,"rank_alt":79,"rank_in_type":3,"yield_mid":5.32,"loc":-1,"gap_mid_up":608033,"gap_mid_down":364704,"gap_price_up":407677,"why":{"base":478131,"floor":0,"storage":0,"parking":0,"outdoor":4588},"why_alt":{"base":478131,"floor":0,"storage":0,"parking":0,"outdoor":4588}},{"id":"1A-4","building":1,"entrance":"A","unit_no":4,"floor":1,"floor_label":"א","rooms":3,"area":79.8,"balcony":20.7,"garden":false,"storage":0.0,"parking":1,"price":854094,"cost":889474,"mv_low":1229765,"mv_mid":1369611,"mv_high":1509538,"gap_low":340291,"gap_mid":480137,"gap_high":620064,"gap_pct":35.1,"gap_alt":500994,"gap_per_equity":2.25,"equity":213524,"rank":64,"rank_alt":26,"rank_in_type":4,"yield_mid":5.2,"loc":-1,"gap_mid_up":607137,"gap_mid_down":360533,"gap_price_up":403268,"why":{"base":478131,"floor":-20124,"storage":0,"parking":0,"outdoor":22130},"why_alt":{"base":478131,"floor":0,"storage":0,"parking":0,"outdoor":22862}},{"id":"5I-7","building":5,"entrance":"I","unit_no":7,"floor":1,"floor_label":"א","rooms":5,"area":129.0,"balcony":13.6,"garden":false,"storage":7.4,"parking":2,"price":1380509,"cost":1428449,"mv_low":1743361,"mv_mid":1895978,"mv_high":2048722,"gap_low":314912,"gap_mid":467528,"gap_high":620273,"gap_pct":24.7,"gap_alt":496401,"gap_per_equity":1.35,"equity":345127,"rank":65,"rank_alt":22,"rank_in_type":25,"yield_mid":4.35,"loc":1,"gap_mid_up":643337,"gap_mid_down":301958,"gap_price_up":343282,"why":{"base":493170,"floor":-28632,"storage":1200,"parking":0,"outdoor":1790},"why_alt":{"base":493170,"floor":0,"storage":1324,"parking":0,"outdoor":1907}},{"id":"1A-5","building":1,"entrance":"A","unit_no":5,"floor":1,"floor_label":"א","rooms":3,"area":81.4,"balcony":13.7,"garden":false,"storage":0.0,"parking":1,"price":849302,"cost":884567,"mv_low":1218967,"mv_mid":1357585,"mv_high":1496284,"gap_low":334400,"gap_mid":473018,"gap_high":611717,"gap_pct":34.8,"gap_alt":493692,"gap_per_equity":2.23,"equity":212326,"rank":66,"rank_alt":60,"rank_in_type":5,"yield_mid":5.23,"loc":-1,"gap_mid_up":598903,"gap_mid_down":354464,"gap_price_up":396581,"why":{"base":489130,"floor":-20528,"storage":0,"parking":0,"outdoor":4416},"why_alt":{"base":489130,"floor":0,"storage":0,"parking":0,"outdoor":4562}},{"id":"3F-3","building":3,"entrance":"F","unit_no":3,"floor":1,"floor_label":"א","rooms":3,"area":81.2,"balcony":13.7,"garden":false,"storage":0.0,"parking":1,"price":847362,"cost":882581,"mv_low":1215994,"mv_mid":1354274,"mv_high":1492635,"gap_low":333413,"gap_mid":471693,"gap_high":610054,"gap_pct":34.8,"gap_alt":492317,"gap_per_equity":2.23,"equity":211840,"rank":67,"rank_alt":70,"rank_in_type":6,"yield_mid":5.24,"loc":1.5,"gap_mid_up":597271,"gap_mid_down":353429,"gap_price_up":395431,"why":{"base":487755,"floor":-20477,"storage":0,"parking":0,"outdoor":4416},"why_alt":{"base":487755,"floor":0,"storage":0,"parking":0,"outdoor":4562}},{"id":"3E-5","building":3,"entrance":"E","unit_no":5,"floor":1,"floor_label":"א","rooms":3,"area":81.2,"balcony":13.7,"garden":false,"storage":0.0,"parking":1,"price":847362,"cost":882581,"mv_low":1215994,"mv_mid":1354274,"mv_high":1492635,"gap_low":333413,"gap_mid":471693,"gap_high":610054,"gap_pct":34.8,"gap_alt":492317,"gap_per_equity":2.23,"equity":211840,"rank":68,"rank_alt":71,"rank_in_type":7,"yield_mid":5.24,"loc":0.5,"gap_mid_up":597271,"gap_mid_down":353429,"gap_price_up":395431,"why":{"base":487755,"floor":-20477,"storage":0,"parking":0,"outdoor":4416},"why_alt":{"base":487755,"floor":0,"storage":0,"parking":0,"outdoor":4562}},{"id":"1B-3","building":1,"entrance":"B","unit_no":3,"floor":1,"floor_label":"א","rooms":3,"area":81.2,"balcony":13.7,"garden":false,"storage":0.0,"parking":1,"price":847362,"cost":882581,"mv_low":1215994,"mv_mid":1354274,"mv_high":1492635,"gap_low":333413,"gap_mid":471693,"gap_high":610054,"gap_pct":34.8,"gap_alt":492317,"gap_per_equity":2.23,"equity":211840,"rank":69,"rank_alt":72,"rank_in_type":8,"yield_mid":5.24,"loc":0,"gap_mid_up":597271,"gap_mid_down":353429,"gap_price_up":395431,"why":{"base":487755,"floor":-20477,"storage":0,"parking":0,"outdoor":4416},"why_alt":{"base":487755,"floor":0,"storage":0,"parking":0,"outdoor":4562}},{"id":"2C-5","building":2,"entrance":"C","unit_no":5,"floor":1,"floor_label":"א","rooms":3,"area":81.2,"balcony":13.7,"garden":false,"storage":0.0,"parking":1,"price":847362,"cost":882581,"mv_low":1215994,"mv_mid":1354274,"mv_high":1492635,"gap_low":333413,"gap_mid":471693,"gap_high":610054,"gap_pct":34.8,"gap_alt":492317,"gap_per_equity":2.23,"equity":211840,"rank":70,"rank_alt":73,"rank_in_type":9,"yield_mid":5.24,"loc":-0.5,"gap_mid_up":597271,"gap_mid_down":353429,"gap_price_up":395431,"why":{"base":487755,"floor":-20477,"storage":0,"parking":0,"outdoor":4416},"why_alt":{"base":487755,"floor":0,"storage":0,"parking":0,"outdoor":4562}},{"id":"2D-3","building":2,"entrance":"D","unit_no":3,"floor":1,"floor_label":"א","rooms":3,"area":81.2,"balcony":13.7,"garden":false,"storage":0.0,"parking":1,"price":847362,"cost":882581,"mv_low":1215994,"mv_mid":1354274,"mv_high":1492635,"gap_low":333413,"gap_mid":471693,"gap_high":610054,"gap_pct":34.8,"gap_alt":492317,"gap_per_equity":2.23,"equity":211840,"rank":71,"rank_alt":74,"rank_in_type":10,"yield_mid":5.24,"loc":-1,"gap_mid_up":597271,"gap_mid_down":353429,"gap_price_up":395431,"why":{"base":487755,"floor":-20477,"storage":0,"parking":0,"outdoor":4416},"why_alt":{"base":487755,"floor":0,"storage":0,"parking":0,"outdoor":4562}},{"id":"4H-6","building":4,"entrance":"H","unit_no":6,"floor":1,"floor_label":"א","rooms":5,"area":128.0,"balcony":13.7,"garden":false,"storage":6.9,"parking":2,"price":1368080,"cost":1415724,"mv_low":1727638,"mv_mid":1878877,"mv_high":2030244,"gap_low":311914,"gap_mid":463153,"gap_high":614520,"gap_pct":24.7,"gap_alt":491766,"gap_per_equity":1.35,"equity":342020,"rank":72,"rank_alt":27,"rank_in_type":26,"yield_mid":4.39,"loc":0.5,"gap_mid_up":637376,"gap_mid_down":299077,"gap_price_up":340026,"why":{"base":488842,"floor":-28406,"storage":769,"parking":0,"outdoor":1949},"why_alt":{"base":488842,"floor":0,"storage":848,"parking":0,"outdoor":2076}},{"id":"5I-6","building":5,"entrance":"I","unit_no":6,"floor":1,"floor_label":"א","rooms":5,"area":128.0,"balcony":13.6,"garden":false,"storage":5.8,"parking":2,"price":1362005,"cost":1409504,"mv_low":1720785,"mv_mid":1871425,"mv_high":2022191,"gap_low":311281,"gap_mid":461921,"gap_high":612687,"gap_pct":24.7,"gap_alt":490420,"gap_per_equity":1.36,"equity":340501,"rank":73,"rank_alt":32,"rank_in_type":27,"yield_mid":4.41,"loc":1,"gap_mid_up":635453,"gap_mid_down":298495,"gap_price_up":339341,"why":{"base":488672,"floor":-28397,"storage":-155,"parking":0,"outdoor":1802},"why_alt":{"base":488672,"floor":0,"storage":-171,"parking":0,"outdoor":1919}},{"id":"3F-4","building":3,"entrance":"F","unit_no":4,"floor":1,"floor_label":"א","rooms":4,"area":111.4,"balcony":13.8,"garden":false,"storage":0.0,"parking":1,"price":1137690,"cost":1179836,"mv_low":1498269,"mv_mid":1633232,"mv_high":1768196,"gap_low":318433,"gap_mid":453396,"gap_high":588359,"gap_pct":27.8,"gap_alt":478268,"gap_per_equity":1.59,"equity":284422,"rank":74,"rank_alt":62,"rank_in_type":37,"yield_mid":4.64,"loc":1.5,"gap_mid_up":604841,"gap_mid_down":310771,"gap_price_up":351004,"why":{"base":474842,"floor":-24742,"storage":0,"parking":0,"outdoor":3296},"why_alt":{"base":474842,"floor":0,"storage":0,"parking":0,"outdoor":3425}},{"id":"3E-4","building":3,"entrance":"E","unit_no":4,"floor":1,"floor_label":"א","rooms":4,"area":111.4,"balcony":13.8,"garden":false,"storage":0.0,"parking":1,"price":1137690,"cost":1179836,"mv_low":1498269,"mv_mid":1633232,"mv_high":1768196,"gap_low":318433,"gap_mid":453396,"gap_high":588359,"gap_pct":27.8,"gap_alt":478268,"gap_per_equity":1.59,"equity":284422,"rank":75,"rank_alt":63,"rank_in_type":38,"yield_mid":4.64,"loc":0.5,"gap_mid_up":604841,"gap_mid_down":310771,"gap_price_up":351004,"why":{"base":474842,"floor":-24742,"storage":0,"parking":0,"outdoor":3296},"why_alt":{"base":474842,"floor":0,"storage":0,"parking":0,"outdoor":3425}},{"id":"2C-4","building":2,"entrance":"C","unit_no":4,"floor":1,"floor_label":"א","rooms":4,"area":111.4,"balcony":13.8,"garden":false,"storage":0.0,"parking":1,"price":1137690,"cost":1179836,"mv_low":1498269,"mv_mid":1633232,"mv_high":1768196,"gap_low":318433,"gap_mid":453396,"gap_high":588359,"gap_pct":27.8,"gap_alt":478268,"gap_per_equity":1.59,"equity":284422,"rank":76,"rank_alt":66,"rank_in_type":39,"yield_mid":4.64,"loc":-0.5,"gap_mid_up":604841,"gap_mid_down":310771,"gap_price_up":351004,"why":{"base":474842,"floor":-24742,"storage":0,"parking":0,"outdoor":3296},"why_alt":{"base":474842,"floor":0,"storage":0,"parking":0,"outdoor":3425}},{"id":"4H-5","building":4,"entrance":"H","unit_no":5,"floor":1,"floor_label":"א","rooms":4,"area":109.6,"balcony":13.2,"garden":false,"storage":4.9,"parking":1,"price":1140076,"cost":1182279,"mv_low":1498599,"mv_mid":1633592,"mv_high":1768585,"gap_low":316320,"gap_mid":451313,"gap_high":586306,"gap_pct":27.6,"gap_alt":476190,"gap_per_equity":1.58,"equity":285019,"rank":77,"rank_alt":75,"rank_in_type":40,"yield_mid":4.63,"loc":0.5,"gap_mid_up":602791,"gap_mid_down":308656,"gap_price_up":348706,"why":{"base":464179,"floor":-24349,"storage":9167,"parking":0,"outdoor":2316},"why_alt":{"base":464179,"floor":0,"storage":9604,"parking":0,"outdoor":2407}},{"id":"4H-4","building":4,"entrance":"H","unit_no":4,"floor":0,"floor_label":"קרקע","rooms":5,"area":128.0,"balcony":18.0,"garden":false,"storage":6.5,"parking":2,"price":1381727,"cost":1429697,"mv_low":1718034,"mv_mid":1868433,"mv_high":2018958,"gap_low":288337,"gap_mid":438736,"gap_high":589261,"gap_pct":23.5,"gap_alt":496522,"gap_per_equity":1.27,"equity":345432,"rank":78,"rank_alt":21,"rank_in_type":28,"yield_mid":4.34,"loc":0.5,"gap_mid_up":611990,"gap_mid_down":275571,"gap_price_up":314380,"why":{"base":488800,"floor":-56808,"storage":411,"parking":0,"outdoor":6333},"why_alt":{"base":488800,"floor":0,"storage":505,"parking":0,"outdoor":7218}},{"id":"5I-4","building":5,"entrance":"I","unit_no":4,"floor":0,"floor_label":"קרקע","rooms":5,"area":129.0,"balcony":13.5,"garden":false,"storage":6.4,"parking":2,"price":1375301,"cost":1423117,"mv_low":1711077,"mv_mid":1860866,"mv_high":2010782,"gap_low":287959,"gap_mid":437749,"gap_high":587665,"gap_pct":23.5,"gap_alt":495302,"gap_per_equity":1.27,"equity":343825,"rank":79,"rank_alt":24,"rank_in_type":29,"yield_mid":4.36,"loc":1,"gap_mid_up":610302,"gap_mid_down":275246,"gap_price_up":313972,"why":{"base":493128,"floor":-57261,"storage":325,"parking":0,"outdoor":1557},"why_alt":{"base":493128,"floor":0,"storage":400,"parking":0,"outdoor":1774}}];
+const ENT_NOTE = {A:"דירות דרומיות מול בניין 5 (~13 מ׳); צד מערבי מעל הרמפה והפחים",B:"בניין 4 כ־16 מ׳ מדרום; דירות מזרחיות מול כניסת הרכב לחניון",C:"חניון פתוח כ־14 מ׳ מדרום מאחורי עצים; קומות 3–4 רואות מעליו לפארק",D:"החניון כ־7–10 מ׳, מעט עצים; קומות 1–2 החלשות בפרויקט",E:"דרום פתוח ברובו; רק קצה החניון קרוב",F:"אין מבנה מול הדרום והמזרח; הכי רחוק מהרמפה",H:"הכי קרוב לפארק, במפלס נמוך; דירות מזרחיות 5 מ׳ מהחניון",I:"פינה דרום־מערבית בשולי הפארק, רחוק מהחניון; חום מערבי"};
+const ENT_BLD = {A:1,B:1,C:2,D:2,E:3,F:3,H:4,I:5};
+const ZONES = [
+  {rate:0, lab:"אף אחד לא נשר", note:"רצפה", floor:true},
+  {rate:0.15, lab:"נשירה נמוכה (15%)", note:""},
+  {rate:0.33, lab:"תרחיש אמצע (33%)", note:""},
+  {rate:0.45, lab:"נשירה גבוהה (45%)", note:""}
+];
+const dropFor = (z, pos) => Math.round(z.rate * (pos - 1));
+const LS_KEY = "elya2149-taken-v1", LS_POS = "elya2149-pos-v2";
+const state = {basis:"base", rooms:"all", ent:"all", more:false, taken:new Set(), pos:1};
+try { const s = JSON.parse(localStorage.getItem(LS_KEY) || "[]"); if (Array.isArray(s)) s.forEach(x => state.taken.add(x)); } catch (e) {}
+try { const p = parseInt(localStorage.getItem(LS_POS), 10); if (p >= 1 && p <= 79) state.pos = p; } catch (e) {}
+const saveTaken = () => { try { localStorage.setItem(LS_KEY, JSON.stringify([...state.taken])); } catch (e) {} };
+
+const fmt = n => Math.round(n).toLocaleString("he-IL");
+const k = n => Math.round(n / 1000).toLocaleString("he-IL") + " אלף";
+const m = n => (n / 1e6).toFixed(2) + " מ׳";
+const rankOf = u => state.basis === "base" ? u.rank : u.rank_alt;
+const altOf = u => state.basis === "base" ? u.rank_alt : u.rank;
+const gapOf = u => state.basis === "base" ? u.gap_mid : u.gap_alt;
+const label = u => `בניין ${u.building} · כניסה ${u.entrance} · דירה ${u.unit_no}`;
+const floorTxt = u => u.floor === 0 ? "קרקע" : `קומה ${u.floor_label}׳`;
+const med = a => { const s = a.slice().sort((x, y) => x - y); const i = Math.floor(s.length / 2); return s.length % 2 ? s[i] : (s[i - 1] + s[i]) / 2; };
+
+function renderTiles() {
+  const el = document.getElementById("tiles");
+  el.innerHTML = [3, 4, 5].map(r => {
+    const t = UNITS.filter(u => u.rooms === r);
+    return `<div class="tile"><div class="k">${r} חדרים · ${t.length} דירות</div>
+      <div class="v">${k(med(t.map(u => u.gap_mid)))} ₪</div>
+      <div class="s">מחיר ${m(med(t.map(u => u.price)))} ₪ מול שווי ${m(med(t.map(u => u.mv_mid)))} ₪ (טווח ${m(med(t.map(u => u.mv_low)))}–${m(med(t.map(u => u.mv_high)))})</div>
+      <div class="s">${med(t.map(u => u.gap_pct)).toFixed(1)}% מתחת לשוק · ${med(t.map(u => u.gap_per_equity)).toFixed(2)} ₪ ערך לכל ₪ הון</div></div>`;
+  }).join("");
+}
+
+function sortedAll() { return UNITS.slice().sort((a, b) => rankOf(a) - rankOf(b)); }
+
+function renderZone() {
+  const all = sortedAll();
+  document.getElementById("zone").innerHTML = ZONES.map(z => {
+    const d = dropFor(z, state.pos);
+    const p = Math.max(1, state.pos - d);
+    const u = all[p - 1];
+    return `<div class="zcard${z.floor ? " floor" : ""}"><div class="lab">${z.lab}${z.note ? " · " + z.note : ""}</div>
+      <div class="pos">בוחרים ${d ? "~" : ""}${p}</div>
+      <div class="u">${label(u)}, ${u.rooms} חד׳, ${floorTxt(u)}</div>
+      <div class="g">פער ${k(gapOf(u))} ₪</div></div>`;
+  }).join("");
+}
+
+function renderNext() {
+  const all = sortedAll().filter(u => !state.taken.has(u.id));
+  const el = document.getElementById("next");
+  if (!all.length) { el.innerHTML = "<b>כל הדירות סומנו כנלקחו.</b>"; return; }
+  const b = all[0];
+  const filt = all.filter(u => (state.rooms === "all" || u.rooms === +state.rooms) && (state.ent === "all" || u.entrance === state.ent));
+  const f = filt[0];
+  let html = `<b>הטובה ביותר שפנויה: ${label(b)}</b><span>${b.rooms} חד׳ · ${floorTxt(b)} · ${b.area} מ״ר</span><span class="num">פער ${k(gapOf(b))} ₪</span><span class="muted">נותרו ${all.length} מתוך 79</span>`;
+  if (f && f.id !== b.id) html += `<span class="muted">בסינון הנוכחי: ${label(f)} (${k(gapOf(f))} ₪)</span>`;
+  const per = [3, 4, 5].map(r => { const x = all.find(u => u.rooms === r); return x ? `<span><b>${r} חד׳:</b> ${x.building}${x.entrance}-${x.unit_no}, ${floorTxt(x)}, <span class="num">${k(gapOf(x))} ₪</span></span>` : `<span><b>${r} חד׳:</b> לא נותרו</span>`; }).join("");
+  html += `<div class="types"><span class="muted">הטובה בכל סוג (ההבדלים בין הסוגים בגבולות אי־הוודאות):</span>${per}</div>`;
+  el.innerHTML = html;
+}
+
+function whyHtml(u) {
+  const w = state.basis === "base" ? u.why : u.why_alt;
+  const names = {floor: `קומה ${u.floor === 0 ? "קרקע" : u.floor_label + "׳"}`, storage: `מחסן ${u.storage} מ״ר`, parking: `${u.parking} חניות`, outdoor: u.garden ? `גינה ${u.balcony} מ״ר` : `מרפסת ${u.balcony} מ״ר`};
+  const chips = ["floor", "storage", "parking", "outdoor"].filter(key => Math.abs(w[key]) >= 1000).map(key => {
+    const v = w[key];
+    return `<span class="chip ${v > 0 ? "pos" : "neg"}">${names[key]} ${v > 0 ? "+" : "−"}${Math.round(Math.abs(v) / 1000)}K</span>`;
+  });
+  return `<span class="chip">בסיס ${Math.round(w.base / 1000)}K</span>${chips.join("")}`;
+}
+
+function renderRows() {
+  const all = sortedAll();
+  const firstFree = all.find(u => !state.taken.has(u.id));
+  const unfiltered = state.rooms === "all" && state.ent === "all";
+  const rows = [];
+  const P = state.pos, markAfter = {};
+  [[3, "↑ נשירה גבוהה"], [2, "↑ תרחיש אמצע"], [1, "↑ נשירה נמוכה"]].forEach(([i, t]) => { const d = dropFor(ZONES[i], P); if (d > 0) markAfter[Math.max(1, P - d)] = t; });
+  markAfter[P] = `↑ רצפה: אם אף אחד לא נשר, זו הדירה של מקום ${P}`;
+  for (const u of all) {
+    if ((state.rooms !== "all" && u.rooms !== +state.rooms) || (state.ent !== "all" && u.entrance !== state.ent)) continue;
+    const taken = state.taken.has(u.id);
+    const d = altOf(u) - rankOf(u);
+    const pill = Math.abs(d) >= 15 ? `<span class="pill ${d > 0 ? "down" : "up"}">${d > 0 ? "↓" : "↑"}</span>` : "";
+    const locCls = u.loc > 0 ? "pos" : (u.loc < 0 ? "neg" : "");
+    rows.push(`<tr class="${taken ? "taken" : ""}${firstFree && u.id === firstFree.id ? " best" : ""}">
+      <td class="keep"><input type="checkbox" id="t-${u.id}" data-id="${u.id}" ${taken ? "checked" : ""} aria-label="סימון ${label(u)} כנלקחה"></td>
+      <td class="rank">${rankOf(u)}</td>
+      <td><div class="unit">${u.building}${u.entrance}-${u.unit_no}</div><div class="sub">${label(u)}</div></td>
+      <td class="n">${u.rooms}</td><td>${floorTxt(u)}</td><td class="n wide">${u.area}</td>
+      <td class="n wide">${u.balcony}${u.garden ? " (גינה)" : ""}</td><td class="n wide">${u.storage || "—"}</td><td class="n">${u.parking}</td>
+      <td class="n wide">${fmt(u.price)}</td><td class="n wide">${fmt(state.basis === "base" ? u.mv_mid : u.mv_mid - (u.gap_mid - u.gap_alt))}</td>
+      <td class="n gap">${fmt(gapOf(u))}</td><td class="n">${u.gap_pct}%</td><td class="wide why">${whyHtml(u)}</td>
+      <td class="n more">${k(u.gap_low)}–${k(u.gap_high)}</td><td class="n more">${u.gap_per_equity.toFixed(2)}</td>
+      <td class="n wide">${altOf(u)} ${pill}</td><td class="n wide loc ${locCls}">${u.loc > 0 ? "+" : ""}${u.loc}</td></tr>`);
+    if (unfiltered && markAfter[rankOf(u)]) rows.push(`<tr class="marker"><td colspan="18">${markAfter[rankOf(u)]}</td></tr>`);
+  }
+  document.getElementById("rows").innerHTML = rows.join("") || `<tr><td colspan="18">אין דירות בסינון הזה.</td></tr>`;
+}
+
+function renderEnt() {
+  const ents = Object.keys(ENT_BLD);
+  const rowsHtml = ents.map(e => {
+    const t = UNITS.filter(u => u.entrance === e);
+    const best = t.slice().sort((a, b) => a.rank - b.rank)[0];
+    const mix = [3, 4, 5].map(r => t.filter(u => u.rooms === r).length).map((n, i) => n ? `${n}×${i + 3}` : "").filter(Boolean).join(" ");
+    const loc = t[0].loc;
+    return `<tr><td><b>${ENT_BLD[e]}${e}</b></td><td class="n">${t.length}</td><td class="n">${mix}</td>
+      <td class="n">${k(t.reduce((s, u) => s + u.gap_mid, 0) / t.length)} ₪</td><td class="n">${best.unit_no} (מקום ${best.rank})</td>
+      <td class="n loc ${loc > 0 ? "pos" : (loc < 0 ? "neg" : "")}">${loc > 0 ? "+" : ""}${loc}</td><td style="white-space:normal;min-width:220px">${ENT_NOTE[e]}</td></tr>`;
+  }).join("");
+  document.getElementById("ent").innerHTML = `<thead><tr><th>כניסה</th><th>דירות</th><th>תמהיל (מס׳×חד׳)</th><th>פער ממוצע</th><th>הדירה המובילה</th><th>מיקום</th><th>הערות מתכנית ההעמדה</th></tr></thead><tbody>${rowsHtml}</tbody>`;
+}
+
+function renderTypes() {
+  const r = [3, 4, 5].map(n => {
+    const t = UNITS.filter(u => u.rooms === n);
+    const md = key => med(t.map(u => u[key]));
+    return `<tr><td><b>${n} חד׳</b></td><td class="n">${t.length}</td><td class="n">${md("area").toFixed(0)} מ״ר</td><td class="n">${fmt(md("price"))}</td>
+      <td class="n">${fmt(md("mv_low"))}</td><td class="n">${fmt(md("mv_mid"))}</td><td class="n">${fmt(md("mv_high"))}</td>
+      <td class="n gap">${fmt(md("gap_mid"))}</td><td class="n">${md("gap_pct").toFixed(1)}%</td><td class="n">${fmt(md("equity"))}</td><td class="n">${md("gap_per_equity").toFixed(2)}</td><td class="n">${md("yield_mid").toFixed(1)}%</td></tr>`;
+  }).join("");
+  document.getElementById("types").innerHTML = `<thead><tr><th>סוג</th><th>דירות</th><th>שטח</th><th>מחיר ₪</th><th>שווי נמוך</th><th>שווי אמצע</th><th>שווי גבוה</th><th>פער ₪</th><th>פער %</th><th>הון 25%</th><th>ערך לכל ₪ הון</th><th>תשואה</th></tr></thead><tbody>${r}</tbody><tfoot><tr><td colspan="12" class="muted" style="white-space:normal">חציון לכל סוג. ״נמוך״ = יד שנייה בבניינים מ־2015 ואילך, ״גבוה״ = מחיר קבלן בפרויקטים השכנים.</td></tr></tfoot>`;
+}
+
+function renderSens() {
+  const t = UNITS.filter(u => u.rooms === 4);
+  const md = key => med(t.map(u => u[key]));
+  document.getElementById("sens").innerHTML = `<tbody>
+    <tr><td>בסיס (מחירי היום)</td><td class="n gap">${k(md("gap_mid"))} ₪</td></tr>
+    <tr><td>שוק עולה 3% בשנה עד 2029</td><td class="n">${k(md("gap_mid_up"))} ₪</td></tr>
+    <tr><td>שוק יורד 3% בשנה עד 2029</td><td class="n">${k(md("gap_mid_down"))} ₪</td></tr>
+    <tr><td>מחיר סופי גבוה ב־9% מהטופס</td><td class="n">${k(md("gap_price_up"))} ₪</td></tr>
+    <tr><td>שווי לפי יד שנייה בלבד</td><td class="n">${k(md("gap_low"))} ₪</td></tr></tbody>`;
+}
+
+function renderAll() { renderZone(); renderNext(); renderRows(); }
+
+document.getElementById("b-base").addEventListener("click", () => { state.basis = "base"; document.getElementById("b-base").setAttribute("aria-pressed", "true"); document.getElementById("b-alt").setAttribute("aria-pressed", "false"); renderAll(); });
+document.getElementById("b-alt").addEventListener("click", () => { state.basis = "alt"; document.getElementById("b-alt").setAttribute("aria-pressed", "true"); document.getElementById("b-base").setAttribute("aria-pressed", "false"); renderAll(); });
+document.querySelectorAll("[data-rooms]").forEach(b => b.addEventListener("click", () => {
+  state.rooms = b.dataset.rooms; document.querySelectorAll("[data-rooms]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); renderNext(); renderRows();
+}));
+const posIn = document.getElementById("f-pos");
+posIn.value = state.pos;
+posIn.addEventListener("change", () => {
+  const p = parseInt(posIn.value, 10);
+  if (!(p >= 1 && p <= 79)) { posIn.value = state.pos; return; }
+  state.pos = p; try { localStorage.setItem(LS_POS, String(p)); } catch (e) {}
+  renderAll();
+});
+const sel = document.getElementById("f-ent");
+Object.keys(ENT_BLD).forEach(e => { const o = document.createElement("option"); o.value = e; o.textContent = `בניין ${ENT_BLD[e]} · כניסה ${e}`; sel.appendChild(o); });
+sel.addEventListener("change", () => { state.ent = sel.value; renderNext(); renderRows(); });
+document.getElementById("b-more").addEventListener("click", e => { state.more = !state.more; document.getElementById("tw").classList.toggle("showmore", state.more); e.currentTarget.setAttribute("aria-pressed", String(state.more)); e.currentTarget.textContent = state.more ? "פחות עמודות" : "עוד עמודות"; });
+const reset = document.getElementById("b-reset");
+reset.addEventListener("click", () => {
+  if (reset.dataset.armed !== "true") { reset.dataset.armed = "true"; reset.textContent = "לחיצה נוספת תנקה הכל"; setTimeout(() => { reset.dataset.armed = "false"; reset.textContent = "ניקוי סימונים"; }, 4000); return; }
+  state.taken.clear(); saveTaken(); reset.dataset.armed = "false"; reset.textContent = "ניקוי סימונים"; renderAll();
+});
+document.getElementById("rows").addEventListener("change", e => {
+  const id = e.target && e.target.dataset && e.target.dataset.id; if (!id) return;
+  if (e.target.checked) state.taken.add(id); else state.taken.delete(id);
+  saveTaken(); renderNext(); renderRows();
+});
+/* ---------- mortgage & financing tab ---------- */
+const RENT = {3: 3700, 4: 4400, 5: 5000};
+const SCHED = [
+  {m: 0, lab: "חתימה", when: "~12.2026", pct: 0.07, linked: false},
+  {m: 1.5, lab: "יום 45", when: "~1.2027", pct: 0.13, linked: false},
+  {m: 7, lab: "חודש 7", when: "~7.2027", pct: 0.175, linked: true},
+  {m: 15, lab: "חודש 15", when: "~3.2028", pct: 0.175, linked: true},
+  {m: 22, lab: "חודש 22", when: "~10.2028", pct: 0.175, linked: true},
+  {m: 29, lab: "חודש 29", when: "~5.2029", pct: 0.175, linked: true},
+  {m: 33, lab: "מסירה", when: "~9.2029", pct: 0.10, linked: true}
+];
+const DEFAULT_MIX = years => [{s: 1 / 3, r: 4.10}, {s: 1 / 3, r: years === 25 ? 4.70 : 4.80}, {s: 1 / 3, r: 4.55}];
+const spitzer = (L, ratePct, years) => { const r = ratePct / 100 / 12, n = years * 12; if (L <= 0) return 0; return r === 0 ? L / n : L * r / (1 - Math.pow(1 + r, -n)); };
+const payFor = (L, tr, years) => tr.reduce((a, t) => a + spitzer(L * t.s, t.r, years), 0);
+const blended = tr => tr.reduce((a, t) => a + t.s * t.r, 0) / (tr.reduce((a, t) => a + t.s, 0) || 1);
+const maxLoan = (price, appr) => Math.max(0, Math.min(0.75 * appr, price - 100000));
+const $ = id => document.getElementById(id);
+const num = id => { const v = parseFloat($(id).value); return isFinite(v) ? v : 0; };
+
+function renderFinTypes() {
+  const rows = [3, 4, 5].map(r => {
+    const t = UNITS.filter(u => u.rooms === r);
+    const price = med(t.map(u => u.price)), appr = med(t.map(u => u.mv_low));
+    const L = maxLoan(price, appr), eq = price - L, L75 = 0.75 * price;
+    const p30 = payFor(L, DEFAULT_MIX(30), 30), p25 = payFor(L, DEFAULT_MIX(25), 25), p30b = payFor(L75, DEFAULT_MIX(30), 30);
+    return `<tr><td><b>${r} חד׳</b></td><td class="n">${fmt(price)}</td><td class="n">${fmt(appr)}</td>
+      <td class="n">${fmt(L)} <span class="muted">(${Math.round(L / price * 100)}%)</span></td><td class="n gap">${fmt(eq)}</td>
+      <td class="n">${fmt(p30)}</td><td class="n">${fmt(p25)}</td><td class="n">${fmt(p30 / 0.4)}</td>
+      <td class="n">${fmt(0.25 * price)} / ${fmt(p30b)}</td><td class="n">${fmt(RENT[r])}</td></tr>`;
+  }).join("");
+  $("fin-types").innerHTML = `<thead><tr><th>סוג</th><th>מחיר ₪</th><th>שמאות שמרנית ₪</th><th>הלוואה מקסימלית ₪</th><th>הון עצמי מינימלי ₪</th>
+    <th>החזר 30 שנה</th><th>החזר 25 שנה</th><th>הכנסה נטו נדרשת</th><th>אם הבנק מממן 75% מהמחיר: הון / החזר</th><th>שכ״ד צפוי</th></tr></thead><tbody>${rows}</tbody>
+    <tfoot><tr><td colspan="10" class="muted" style="white-space:normal">חציון לכל סוג. ״הכנסה נטו נדרשת״ = החזר 30 שנה חלקי 40%, נטו של כל הלווים יחד.</td></tr></tfoot>`;
+}
+
+function carryFor(price, eq) {
+  const tr = DEFAULT_MIX(30), rb = blended(tr);
+  let left = eq, drawn = 0, prev = 0, interest = 0; const stage = {};
+  for (const s of SCHED) {
+    interest += drawn * rb / 1200 * (s.m - prev); prev = s.m;
+    const amt = price * s.pct + (s.linked ? 0.5 * price * s.pct * (Math.pow(1.035, s.m / 12) - 1) : 0);
+    const fe = Math.min(left, amt); left -= fe; drawn += amt - fe;
+    stage[s.m] = drawn * rb / 1200;
+  }
+  return {stage, interest, after: payFor(drawn, tr, 30)};
+}
+
+function renderCarry() {
+  const head = `<thead><tr><th>סוג</th><th>הון עצמי</th><th>מיום 45</th><th>מחודש 7</th><th>מחודש 15</th><th>מחודש 22</th><th>מחודש 29</th><th>ריבית עד המסירה</th><th>החזר אחרי המסירה</th><th>שכ״ד צפוי</th><th>הפרש חודשי</th></tr></thead>`;
+  const rows = [];
+  [3, 4, 5].forEach(r => {
+    const price = med(UNITS.filter(u => u.rooms === r).map(u => u.price));
+    [[100000, "100 אלף (מינימום)"], [0.2 * price, "20% (" + fmt(0.2 * price) + ")"]].forEach(([eq, lab], i) => {
+      const c = carryFor(price, eq), net = RENT[r] - c.after;
+      rows.push(`<tr><td>${i === 0 ? `<b>${r} חד׳</b>` : ""}</td><td>${lab}</td>${[1.5, 7, 15, 22, 29].map(m => `<td class="n">${c.stage[m] ? fmt(c.stage[m]) : "—"}</td>`).join("")}
+        <td class="n">${fmt(c.interest)}</td><td class="n">${fmt(c.after)}</td><td class="n">${fmt(RENT[r])}</td><td class="n ${net >= 0 ? "gap" : "neg"}">${net >= 0 ? "+" : "−"}${fmt(Math.abs(net))}</td></tr>`);
+    });
+  });
+  $("carry").innerHTML = head + `<tbody>${rows.join("")}</tbody>`;
+}
+
+function calcSetUnit(u) {
+  $("c-appr").value = Math.round(u.mv_low / 10000) * 10000;
+  $("c-eq").value = Math.ceil((u.price - maxLoan(u.price, u.mv_low)) / 1000) * 1000;
+  $("c-rent").value = RENT[u.rooms];
+}
+
+function calc() {
+  const u = UNITS.find(x => x.id === $("c-unit").value) || UNITS[0];
+  const price = u.price, appr = num("c-appr"), eq = num("c-eq"), g = num("c-idx") / 100;
+  const years = +$("c-term").value, grace = $("c-grace").value === "interest";
+  const tr = [1, 2, 3].map(i => ({s: num("c-s" + i) / 100, r: num("c-r" + i)}));
+  const rb = blended(tr);
+  let eqLeft = eq, drawn = 0, fullPay = 0, needFrom = null, consInterest = 0, consPaidFull = 0, prevM = 0, rows = [], maxCons = 0;
+  for (const s of SCHED) {
+    const base = price * s.pct, link = s.linked ? 0.5 * base * (Math.pow(1 + g, s.m / 12) - 1) : 0, amt = base + link;
+    if (grace) consInterest += drawn * rb / 100 / 12 * (s.m - prevM);
+    else consPaidFull += fullPay * (s.m - prevM);
+    prevM = s.m;
+    const fromEq = Math.min(eqLeft, amt), fromLoan = amt - fromEq;
+    eqLeft -= fromEq; drawn += fromLoan;
+    if (fromLoan > 0 && needFrom === null) needFrom = s;
+    fullPay += payFor(fromLoan, tr, years);
+    const monthly = grace ? drawn * rb / 100 / 12 : fullPay;
+    if (s.m < 33) maxCons = Math.max(maxCons, monthly);
+    rows.push(`<tr><td><b>${s.lab}</b> <span class="muted">${s.when}</span></td><td class="n">${fmt(amt)}</td><td class="n">${link ? fmt(link) : "—"}</td>
+      <td class="n">${fromEq ? fmt(fromEq) : "—"}</td><td class="n">${fromLoan ? fmt(fromLoan) : "—"}</td><td class="n">${fmt(drawn)}</td><td class="n">${fmt(monthly)}</td></tr>`);
+  }
+  const total = SCHED.reduce((a, s) => a + price * s.pct + (s.linked ? 0.5 * price * s.pct * (Math.pow(1 + g, s.m / 12) - 1) : 0), 0);
+  const loan = drawn, payAfter = grace ? payFor(loan, tr, years) : fullPay;
+  const totalInterest = grace ? consInterest + payAfter * years * 12 - loan : fullPay * years * 12 - loan;
+  rows.push(`<tr class="sum"><td><b>אחרי המסירה</b></td><td class="n">${fmt(total)}</td><td class="n">${fmt(total - price)}</td><td class="n">${fmt(Math.min(eq, total))}</td><td class="n">${fmt(loan)}</td><td class="n">${fmt(loan)}</td><td class="n gap">${fmt(payAfter)}</td></tr>`);
+  $("calc-sched").innerHTML = `<thead><tr><th>מועד</th><th>תשלום ליזם ₪</th><th>מתוכו הצמדה</th><th>מההון העצמי</th><th>מהמשכנתא</th><th>משכנתא שנמשכה</th><th>החזר חודשי מכאן</th></tr></thead><tbody>${rows.join("")}</tbody>`;
+
+  const maxL = maxLoan(price, appr), warns = [];
+  if (eq < 100000) warns.push(`הון עצמי מינימלי הוא 100 אלף ₪.`);
+  if (loan > maxL + 500) warns.push(`ההלוואה (${fmt(loan)} ₪) גבוהה מהמותר לפי השמאות (${fmt(maxL)} ₪). צריך עוד ${fmt(loan - maxL)} ₪ הון עצמי, או שמאות גבוהה יותר.`);
+  const sh = tr.reduce((a, t) => a + t.s, 0);
+  if (Math.abs(sh - 1) > 0.011) warns.push(`חלקי המסלולים מסתכמים ב־${Math.round(sh * 100)}% ולא ב־100%.`);
+  if (tr[1].s < 0.333) warns.push(`לפחות שליש מההלוואה צריך להיות בריבית קבועה.`);
+  const rent = num("c-rent"), net = rent - payAfter;
+  $("calc-out").innerHTML = `
+    <div class="kv"><span>החזר חודשי אחרי המסירה</span><b class="big">${fmt(payAfter)} ₪</b></div>
+    <div class="kv"><span>הלוואה</span><b>${fmt(loan)} ₪ <span class="muted">(${Math.round(loan / price * 100)}% מהמחיר, מותר עד ${fmt(maxL)})</span></b></div>
+    <div class="kv"><span>ריבית משוקללת</span><b>${rb.toFixed(2)}%</b></div>
+    <div class="kv"><span>בזמן הבנייה, עד</span><b>${fmt(maxCons)} ₪ בחודש</b></div>
+    <div class="kv"><span>${grace ? "ריבית ששולמה עד המסירה" : "תשלומים עד המסירה"}</span><b>${fmt(grace ? consInterest : consPaidFull)} ₪</b></div>
+    <div class="kv"><span>המשכנתא נדרשת מ־</span><b>${needFrom ? needFrom.lab + " (" + needFrom.when + ")" : "לא נדרשת"}</b></div>
+    <div class="kv"><span>הכנסה נטו נדרשת (40%)</span><b>${fmt(payAfter / 0.4)} ₪</b></div>
+    <div class="kv"><span>שכ״ד פחות החזר</span><b class="${net >= 0 ? "pos" : "neg"}">${net >= 0 ? "+" : "−"}${fmt(Math.abs(net))} ₪</b></div>
+    <div class="kv"><span>הלוואה שבה שכ״ד מכסה את ההחזר</span><b>${fmt(rent / (payFor(1, tr, years) || 1))} ₪</b></div>
+    <div class="kv"><span>סה״כ ריבית לאורך ההלוואה</span><b>${fmt(totalInterest)} ₪</b></div>
+    <div class="kv"><span>סה״כ ליזם כולל הצמדה</span><b>${fmt(total)} ₪</b></div>
+    ${warns.length ? `<div class="warnbox">${warns.map(w => `<p>${w}</p>`).join("")}</div>` : ""}`;
+}
+
+function initCalc() {
+  const sel = $("c-unit");
+  UNITS.slice().sort((a, b) => a.rank - b.rank).forEach(u => {
+    const o = document.createElement("option"); o.value = u.id;
+    o.textContent = `${u.rank}. ${u.id} · ${u.rooms} חד׳ · ${floorTxt(u)} · ${fmt(u.price)} ₪`; sel.appendChild(o);
+  });
+  calcSetUnit(UNITS.find(u => u.rank === 1));
+  sel.addEventListener("change", () => { calcSetUnit(UNITS.find(u => u.id === sel.value)); calc(); });
+  $("c-term").addEventListener("change", () => {
+    const r2 = $("c-r2"); const v = parseFloat(r2.value);
+    if (+$("c-term").value === 25 && Math.abs(v - 4.80) < 0.001) r2.value = "4.70";
+    if (+$("c-term").value === 30 && Math.abs(v - 4.70) < 0.001) r2.value = "4.80";
+    calc();
+  });
+  ["c-appr", "c-eq", "c-grace", "c-idx", "c-rent", "c-s1", "c-s2", "c-s3", "c-r1", "c-r2", "c-r3"].forEach(id => $(id).addEventListener("input", calc));
+  $("c-grace").addEventListener("change", calc);
+  renderFinTypes(); renderCarry(); calc();
+}
+
+function route() {
+  const v = location.hash === "#money" ? "money" : "pick";
+  document.getElementById("view-pick").hidden = v !== "pick";
+  document.getElementById("view-money").hidden = v !== "money";
+  document.getElementById("tab-pick").setAttribute("aria-selected", String(v === "pick"));
+  document.getElementById("tab-money").setAttribute("aria-selected", String(v === "money"));
+}
+window.addEventListener("hashchange", route);
+route();
+renderTiles(); renderEnt(); renderTypes(); renderSens(); renderAll(); initCalc();
+</script>
+
+</body>
+</html>
