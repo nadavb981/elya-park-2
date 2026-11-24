@@ -302,7 +302,7 @@ ul.check li.bad::before{background:var(--bad)}
 
 <section aria-labelledby="h-carry">
   <h2 id="h-carry">בזמן הבנייה אין שכירות</h2>
-  <p>עד המסירה (כ־9.2029, ובמציאות סוף 2029 עד אמצע 2030) אין הכנסה מהדירה, ומשלמים לבנק על מה שנמשך עד אז. בריבית בלבד ההחזר מתחיל קטן וגדל עם כל משיכה. הטבלה לפי חציון כל סוג, תמהיל ברירת המחדל, 30 שנה ומדד 3.5%, בשני מצבים: הון עצמי מינימלי (אם השמאות מספיקה) והון עצמי לתכנון (מימון 75% מהמחיר).</p>
+  <p>עד המסירה (כ־9.2029, ובמציאות סוף 2029 עד אמצע 2030) אין הכנסה מהדירה, ומשלמים לבנק על מה שנמשך עד אז. בריבית בלבד ההחזר מתחיל קטן וגדל עם כל משיכה. הטבלה לפי חציון כל סוג, תמהיל ברירת המחדל, 30 שנה ומדד 3.5%, בשני תרחישים: טוב (השמאי מעריך לפי שווי השוק, הון עצמי מינימלי) וזהיר (הבנק מלווה 75% מהמחיר).</p>
   <div class="tablewrap"><table class="data" id="carry"></table></div>
   <p class="muted" style="font-size:14px">הריבית עד המסירה, כ־35–75 אלף ₪, היא המחיר של קנייה לפני שהבניין נבנה, מול פער של כ־470–520 אלף ₪. ב־3 חדרים שכר הדירה מכסה את ההחזר כמעט מהיום הראשון.</p>
 </section>
@@ -628,9 +628,9 @@ function renderFinTypes() {
       <td class="n">${fmt(eq)}</td><td class="n">${fmt(L)} <span class="muted">(${Math.round(L / price * 100)}%)</span></td><td class="n">${fmt(p30)} / ${fmt(p25)}</td><td class="n">${fmt(RENT[r])}</td></tr>`;
   }).join("");
   $("fin-types").innerHTML = `<thead><tr><th rowspan="2">סוג</th><th rowspan="2">מחיר ₪</th><th rowspan="2">שמאות לפי יד שנייה (הנחה)</th>
-    <th colspan="3">לתכנון: הבנק מממן 75% מהמחיר</th><th colspan="3">אם השמאות מספיקה: מחיר פחות 100 אלף</th><th rowspan="2">שכ״ד צפוי</th></tr>
+    <th colspan="3">תרחיש זהיר: השמאי מעריך בערך את המחיר, הבנק מלווה 75% מהמחיר</th><th colspan="3">תרחיש טוב: השמאי מעריך לפי שווי השוק, הבנק מלווה את המחיר פחות 100 אלף</th><th rowspan="2">שכ״ד צפוי</th></tr>
     <tr><th>הון עצמי</th><th>החזר 30 שנה</th><th>הכנסה נטו נדרשת</th><th>הון עצמי</th><th>הלוואה</th><th>החזר 30 / 25 שנה</th></tr></thead><tbody>${rows}</tbody>
-    <tfoot><tr><td colspan="10" class="muted" style="white-space:normal">חציון לכל סוג. ההון העצמי כולל את ההצמדה המשוערת (כ־2.4% מהמחיר), כי הבנק מממן לפי המחיר ולא לפי ההצמדה. ״הכנסה נטו נדרשת״ = החזר חלקי 40%, נטו של כל הלווים יחד.</td></tr></tfoot>`;
+    <tfoot><tr><td colspan="10" class="muted" style="white-space:normal">הבנק מלווה את הנמוך מבין 75% מהשמאות לבין המחיר פחות 100 אלף ₪. איזה תרחיש יחול יתברר רק בשמאות של הבנק, אחרי החתימה, ולכן כדאי לתכנן לפי התרחיש הזהיר. חציון לכל סוג. ההון העצמי כולל את ההצמדה המשוערת (כ־2.4% מהמחיר), כי הבנק מממן לפי המחיר ולא לפי ההצמדה. ״הכנסה נטו נדרשת״ = החזר חלקי 40%, נטו של כל הלווים יחד.</td></tr></tfoot>`;
 }
 
 function carryFor(price, eq) {
@@ -652,7 +652,7 @@ function renderCarry() {
   [3, 4, 5].forEach(r => {
     const t = UNITS.filter(u => u.rooms === r);
     const price = med(t.map(u => u.price)), appr = med(t.map(u => u.mv_low)), total = price * (1 + LS);
-    [[total - maxLoan(price, appr), "מינימום"], [total - 0.75 * price, "לתכנון (75%)"]].forEach(([eq, lab], i) => {
+    [[total - maxLoan(price, appr), "תרחיש טוב"], [total - 0.75 * price, "תרחיש זהיר"]].forEach(([eq, lab], i) => {
       const c = carryFor(price, eq), net = RENT[r] - c.after;
       rows.push(`<tr><td>${i === 0 ? `<b>${r} חד׳</b>` : ""}</td><td>${lab}: ${fmt(eq)}</td>${[1.5, 7, 15, 22, 29].map(m => `<td class="n">${c.stage[m] > 1 ? fmt(c.stage[m]) : "—"}</td>`).join("")}
         <td class="n">${fmt(c.interest)}</td><td class="n">${fmt(c.after)}</td><td class="n">${fmt(RENT[r])}</td><td class="n ${net >= 0 ? "gap" : "neg"}">${net >= 0 ? "+" : "−"}${fmt(Math.abs(net))}</td></tr>`);
