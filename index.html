@@ -184,8 +184,8 @@ ul.check li.bad::before{background:var(--bad)}
   <p>ביום הבחירה מסמנים כל דירה שנלקחה, והרשימה מראה מיד את הדירה הטובה ביותר שעוד פנויה. הסימונים נשמרים בדפדפן הזה בלבד.</p>
   <div class="toolbar">
     <div class="seg" role="group" aria-label="בסיס הדירוג">
-      <button id="b-base" aria-pressed="true">עם פרמיית קומה +1.5%</button>
-      <button id="b-alt" aria-pressed="false">בלי פרמיית קומה</button>
+      <button id="b-alt" aria-pressed="true">בלי פרמיית קומה</button>
+      <button id="b-base" aria-pressed="false">עם פרמיית קומה +1.5%</button>
     </div>
     <div class="seg" role="group" aria-label="מספר חדרים">
       <button data-rooms="all" aria-pressed="true">הכל</button>
@@ -394,7 +394,7 @@ ul.check li.bad::before{background:var(--bad)}
 <section class="foot" aria-labelledby="h-method">
   <h3 id="h-method">שיטה ומקורות</h3>
   <p>מחירים: טופס ג׳4 מ־16.4.2026 באתר הפרויקט, 79 דירות במחיר מטרה. שווי שוק: 1,183 עסקאות ברמות מינואר 2024 (רשות המסים דרך over.org.il ו־nadlan.gov.il). מתוכן 117 מכירות קבלן בשוק החופשי, 157 מכירות יד שנייה בבניינים שנבנו מ־2015 ו־299 עסקאות מסובסדות שהוצאו מהחישוב. לכל סוג דירה נלקח חציון 10 העסקאות הקרובות בגודל, ב־24 החודשים האחרונים. השוואה חיצונית: 263 מכירות חוזרות של מחיר למשתכן בבאר שבע. שכירות: nadlan.gov.il, מודעות ולמ״ס. הגרלה: dira.moch.gov.il, תקנון הגרלה 2149 ופרויקטים אחרים במכרז 325/2021.</p>
-  <p>התאמות בין דירות: מ״ר מרפסת = ⅓ מ״ר בנוי, גינה = ¼, מחסן = 0.4 (מעבר למחסן טיפוסי של 6 מ״ר ב־5 חדרים), חנייה שנייה = 60 אלף ₪, קומה = +1.5% (חלופה: 0%). שבירת שוויון: דירות בטווח 20 אלף ₪ זו מזו נחשבות שוות, וביניהן קודמות 4 חד׳, אחר כך 5 ו־3, ואז ציון מיקום וקומה.</p>
+  <p>התאמות בין דירות: מ״ר מרפסת = ⅓ מ״ר בנוי, גינה = ¼, מחסן = 0.4 (מעבר למחסן טיפוסי של 6 מ״ר ב־5 חדרים), חנייה שנייה = 60 אלף ₪, קומה: ברירת המחדל בלי פרמיה (המחיר של היזם זהה בכל הקומות, ובנתונים המקומיים פרמיה לא אוששה). חלופה: +1.5% לקומה. שבירת שוויון: דירות בטווח 20 אלף ₪ זו מזו נחשבות שוות, וביניהן קודמות 4 חד׳, אחר כך 5 ו־3, ואז ציון מיקום וקומה.</p>
   <p>מגבלות: נתוני יד שנייה ל־3 חדרים דלים. פרמיית הקומה לא אוששה בנתונים המקומיים: במכירות קבלן בקומות 1–4 (135 עסקאות ב־10 קבוצות בניין וגודל) המחיר למ״ר ירד בכ־6% לקומה, כנראה כי הדירות בשוק החופשי בקומות הנמוכות הן לרוב דירות מיוחדות. זו הערכה מבוססת נתונים ולא שומה מוסמכת, ולמשכנתא תידרש שומת בנק.</p>
 </section>
 </main>
@@ -411,7 +411,7 @@ const ZONES = [
 ];
 const dropFor = (z, pos) => Math.round(z.rate * (pos - 1));
 const LS_KEY = "elya2149-taken-v1", LS_POS = "elya2149-pos-v2";
-const state = {basis:"base", rooms:"all", ent:"all", more:false, taken:new Set(), pos:7};
+const state = {basis:"alt", rooms:"all", ent:"all", more:false, taken:new Set(), pos:7};
 try { const s = JSON.parse(localStorage.getItem(LS_KEY) || "[]"); if (Array.isArray(s)) s.forEach(x => state.taken.add(x)); } catch (e) {}
 try { const p = parseInt(localStorage.getItem(LS_POS), 10); if (p >= 1 && p <= 79) state.pos = p; } catch (e) {}
 const saveTaken = () => { try { localStorage.setItem(LS_KEY, JSON.stringify([...state.taken])); } catch (e) {} };
@@ -510,11 +510,11 @@ function renderEnt() {
   const ents = Object.keys(ENT_BLD);
   const rowsHtml = ents.map(e => {
     const t = UNITS.filter(u => u.entrance === e);
-    const best = t.slice().sort((a, b) => a.rank - b.rank)[0];
+    const best = t.slice().sort((a, b) => rankOf(a) - rankOf(b))[0];
     const mix = [3, 4, 5].map(r => t.filter(u => u.rooms === r).length).map((n, i) => n ? `${n}×${i + 3}` : "").filter(Boolean).join(" ");
     const loc = t[0].loc;
     return `<tr><td><b>${ENT_BLD[e]}${e}</b></td><td class="n">${t.length}</td><td class="n">${mix}</td>
-      <td class="n">${k(t.reduce((s, u) => s + u.gap_mid, 0) / t.length)} ₪</td><td class="n">${best.unit_no} (מקום ${best.rank})</td>
+      <td class="n">${k(t.reduce((s, u) => s + u.gap_mid, 0) / t.length)} ₪</td><td class="n">${best.unit_no} (מקום ${rankOf(best)})</td>
       <td class="n loc ${loc > 0 ? "pos" : (loc < 0 ? "neg" : "")}">${loc > 0 ? "+" : ""}${loc}</td><td style="white-space:normal;min-width:220px">${ENT_NOTE[e]}</td></tr>`;
   }).join("");
   document.getElementById("ent").innerHTML = `<thead><tr><th>כניסה</th><th>דירות</th><th>תמהיל (מס׳×חד׳)</th><th>פער ממוצע</th><th>הדירה המובילה</th><th>מיקום</th><th>הערות מתכנית ההעמדה</th></tr></thead><tbody>${rowsHtml}</tbody>`;
@@ -712,11 +712,11 @@ function calc() {
 
 function initCalc() {
   const sel = $("c-unit");
-  UNITS.slice().sort((a, b) => a.rank - b.rank).forEach(u => {
+  UNITS.slice().sort((a, b) => a.rank_alt - b.rank_alt).forEach(u => {
     const o = document.createElement("option"); o.value = u.id;
-    o.textContent = `${u.rank}. ${u.id} · ${u.rooms} חד׳ · ${floorTxt(u)} · ${fmt(u.price)} ₪`; sel.appendChild(o);
+    o.textContent = `${u.rank_alt}. ${u.id} · ${u.rooms} חד׳ · ${floorTxt(u)} · ${fmt(u.price)} ₪`; sel.appendChild(o);
   });
-  calcSetUnit(UNITS.find(u => u.rank === 1));
+  calcSetUnit(UNITS.find(u => u.rank_alt === 1));
   sel.addEventListener("change", () => { calcSetUnit(UNITS.find(u => u.id === sel.value)); calc(); });
   $("c-term").addEventListener("change", () => {
     const r2 = $("c-r2"); const v = parseFloat(r2.value);
