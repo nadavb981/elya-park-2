@@ -114,6 +114,9 @@ tr.sum td{font-weight:700;background:var(--sunk)}
 .steps td:first-child{font-weight:700;white-space:nowrap;vertical-align:top}
 .steps td:last-child{white-space:normal}
 .tw-scroll{max-height:72vh;overflow:auto}
+.uchips{display:flex;flex-wrap:wrap;gap:6px}
+.uchip{display:inline-block;white-space:nowrap;font-family:var(--f-data);font-weight:600;font-size:14px;padding:3px 9px;border-radius:6px;background:var(--sunk);border:1px solid var(--line);color:var(--ink)}
+#top{display:grid;gap:10px}
 .callout{border-color:var(--accent);border-width:2px}
 .callout ol{margin:0;padding-inline-start:20px;display:grid;gap:6px}
 .loc{font-family:var(--f-data)}
@@ -544,13 +547,20 @@ function renderSens() {
 
 function renderTop() {
   const P = state.pos, all = sortedAll();
-  const topP = all.slice(0, P);
-  const both = UNITS.filter(u => u.rank <= Math.max(P, 7) && u.rank_alt <= Math.max(P, 7)).sort((a, b) => rankOf(a) - rankOf(b));
-  const top10 = all.slice(0, 10).map(gapOf), spread = Math.round((Math.max(...top10) - Math.min(...top10)) / 1000);
-  const ids = a => a.map(u => `<b>${u.building}${u.entrance}-${u.unit_no}</b>`).join(", ");
-  $("top").innerHTML = `<p>במקום ${P}, לפחות אחת מ־${P} הדירות הראשונות ברשימה הנוכחית תהיה פנויה, גם אם כל מי שלפני בוחר מתוכן: ${ids(topP)}.</p>
-    <p>בראש שני הדירוגים (עם פרמיית קומה ובלעדיה): ${both.length ? ids(both) : "אין דירות משותפות"}.</p>
-    <p>ההבדלים בין 10 הראשונות קטנים, עד כ־${spread} אלף ₪, ובתוך אי־הוודאות. לכן כדאי להחליט בסדר הזה:</p>
+  const chip = u => `<span class="uchip" dir="ltr">${u.building}${u.entrance}-${u.unit_no}</span>`;
+  const both = UNITS.filter(u => u.rank <= 7 && u.rank_alt <= 7).sort((a, b) => rankOf(a) - rankOf(b));
+  const win = P <= 10 ? all.slice(0, 10) : all.slice(Math.max(0, P - 6), Math.min(all.length, P + 4));
+  const gaps = win.map(gapOf), spread = Math.round((Math.max(...gaps) - Math.min(...gaps)) / 1000);
+  const floorU = all[P - 1];
+  let first;
+  if (P <= 10) {
+    first = `<p>במקום ${P}, לפחות אחת מ־${P} הדירות הראשונות ברשימה תהיה פנויה, גם אם כל מי שלפני בוחר מתוכן:</p><div class="uchips">${all.slice(0, P).map(chip).join("")}</div>`;
+  } else {
+    first = `<p>במקום ${P}, לפני התור בוחרים ${P - 1} זוכים. במקרה הגרוע נשארת הדירה ה־${P} ברשימה, ${chip(floorU)} (פער ${k(gapOf(floorU))} ₪), או טובה ממנה. הכרטיסים למטה מראים מה צפוי אם חלק מהזוכים נושרים.</p>`;
+  }
+  $("top").innerHTML = `${first}
+    <p>בראש הרשימה בשני הדירוגים (עם פרמיית קומה ובלעדיה):</p><div class="uchips">${both.length ? both.map(chip).join("") : "אין"}</div>
+    <p>ההבדלים בין דירות סמוכות ברשימה קטנים, עד כ־${spread} אלף ₪, ובתוך אי־הוודאות. לכן כדאי להחליט בסדר הזה:</p>
     <ol><li><b>מספר חדרים לפי המימון</b>: כמה הון עצמי יש ואיזה החזר חודשי נוח (לשונית ״משכנתא ומימון״). ב־3 חדרים שכר הדירה מכסה כמעט את כל ההחזר. ב־4 ו־5 חדרים הפער בשקלים גדול יותר, אבל ההחזר גבוה משכר הדירה.</li>
     <li><b>כיוון הדירה</b>: דרום או דרום־מזרח, לא מול החניון הפתוח או הרמפה. לבדוק בתוכנית הקומה בפגישה.</li>
     <li><b>בתוך זה</b>: הדירה הגבוהה ביותר ברשימה שעוד פנויה.</li></ol>`;
